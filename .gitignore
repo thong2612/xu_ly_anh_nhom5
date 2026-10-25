@@ -1,0 +1,88 @@
+# Python runtimes, bytecode, and test/tool caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+# Local environment, credentials, and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+.aws/
+*.pem
+*.key
+*service-account*.json
+
+# Editors and machine-local files
+.idea/
+.vscode/
+*.sublime-workspace
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+*.local
+
+# Temporary files and logs
+*.tmp
+*.temp
+*.partial
+*.bak
+*.log
+
+# Raw/processed data, generated manifests, annotations, and splits
+/data/raw/
+/data/processed/
+/data/annotations/
+/data/external_validation/
+/data/metadata/
+/data/splits/
+/data/features/cache/
+/data/features/*.csv
+/data/features/*.parquet
+
+# Model/checkpoint artifacts and local registries
+/models/
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+
+# Archives, offline installers, and generated release bundles
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.whl
+**/wheelhouse/
+/release/
+
+# Keep only the final Phase 8 paper, its references, and its embedded figures
+/reports/*
+!/reports/phase08/
+/reports/phase08/*
+!/reports/phase08/mangoresearch_scientific_report.md
+!/reports/phase08/references.md
+!/reports/phase08/figures/
+!/reports/phase08/figures/**

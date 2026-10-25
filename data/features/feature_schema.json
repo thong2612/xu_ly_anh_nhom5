@@ -1,0 +1,1992 @@
+{
+  "schema_version": 1,
+  "pipeline_version": "phase4-features-v1",
+  "description": "CSV feature tables have one row per image_id. Only columns listed under feature_columns are numeric model inputs.",
+  "metadata_columns": [
+    "image_id",
+    "dataset",
+    "task",
+    "label",
+    "phase02_split",
+    "image_path",
+    "source_sha256",
+    "split_risk_status",
+    "official_accuracy_eligible"
+  ],
+  "target_columns": {
+    "ripeness": "label (ripeness target)",
+    "defect": "label (healthy/defective target)"
+  },
+  "split_column": "phase02_split",
+  "feature_columns": {
+    "ripeness": [
+      "original_color__hsv_h_mean",
+      "original_color__hsv_h_median",
+      "original_color__hsv_h_std",
+      "original_color__hsv_h_min",
+      "original_color__hsv_h_max",
+      "original_color__hsv_h_p10",
+      "original_color__hsv_h_p25",
+      "original_color__hsv_h_p50",
+      "original_color__hsv_h_p75",
+      "original_color__hsv_h_p90",
+      "original_color__hsv_s_mean",
+      "original_color__hsv_s_median",
+      "original_color__hsv_s_std",
+      "original_color__hsv_s_min",
+      "original_color__hsv_s_max",
+      "original_color__hsv_s_p10",
+      "original_color__hsv_s_p25",
+      "original_color__hsv_s_p50",
+      "original_color__hsv_s_p75",
+      "original_color__hsv_s_p90",
+      "original_color__hsv_v_mean",
+      "original_color__hsv_v_median",
+      "original_color__hsv_v_std",
+      "original_color__hsv_v_min",
+      "original_color__hsv_v_max",
+      "original_color__hsv_v_p10",
+      "original_color__hsv_v_p25",
+      "original_color__hsv_v_p50",
+      "original_color__hsv_v_p75",
+      "original_color__hsv_v_p90",
+      "original_color__lab_l_mean",
+      "original_color__lab_l_median",
+      "original_color__lab_l_std",
+      "original_color__lab_l_min",
+      "original_color__lab_l_max",
+      "original_color__lab_l_p10",
+      "original_color__lab_l_p25",
+      "original_color__lab_l_p50",
+      "original_color__lab_l_p75",
+      "original_color__lab_l_p90",
+      "original_color__lab_a_mean",
+      "original_color__lab_a_median",
+      "original_color__lab_a_std",
+      "original_color__lab_a_min",
+      "original_color__lab_a_max",
+      "original_color__lab_a_p10",
+      "original_color__lab_a_p25",
+      "original_color__lab_a_p50",
+      "original_color__lab_a_p75",
+      "original_color__lab_a_p90",
+      "original_color__lab_b_mean",
+      "original_color__lab_b_median",
+      "original_color__lab_b_std",
+      "original_color__lab_b_min",
+      "original_color__lab_b_max",
+      "original_color__lab_b_p10",
+      "original_color__lab_b_p25",
+      "original_color__lab_b_p50",
+      "original_color__lab_b_p75",
+      "original_color__lab_b_p90",
+      "original_color__hsv_h_circular_mean",
+      "original_color__hsv_h_circular_resultant",
+      "original_color__green_fraction",
+      "original_color__yellow_fraction",
+      "original_color__orange_fraction",
+      "original_color__fruit_area_fraction",
+      "gray_world_color__hsv_h_mean",
+      "gray_world_color__hsv_h_median",
+      "gray_world_color__hsv_h_std",
+      "gray_world_color__hsv_h_min",
+      "gray_world_color__hsv_h_max",
+      "gray_world_color__hsv_h_p10",
+      "gray_world_color__hsv_h_p25",
+      "gray_world_color__hsv_h_p50",
+      "gray_world_color__hsv_h_p75",
+      "gray_world_color__hsv_h_p90",
+      "gray_world_color__hsv_s_mean",
+      "gray_world_color__hsv_s_median",
+      "gray_world_color__hsv_s_std",
+      "gray_world_color__hsv_s_min",
+      "gray_world_color__hsv_s_max",
+      "gray_world_color__hsv_s_p10",
+      "gray_world_color__hsv_s_p25",
+      "gray_world_color__hsv_s_p50",
+      "gray_world_color__hsv_s_p75",
+      "gray_world_color__hsv_s_p90",
+      "gray_world_color__hsv_v_mean",
+      "gray_world_color__hsv_v_median",
+      "gray_world_color__hsv_v_std",
+      "gray_world_color__hsv_v_min",
+      "gray_world_color__hsv_v_max",
+      "gray_world_color__hsv_v_p10",
+      "gray_world_color__hsv_v_p25",
+      "gray_world_color__hsv_v_p50",
+      "gray_world_color__hsv_v_p75",
+      "gray_world_color__hsv_v_p90",
+      "gray_world_color__lab_l_mean",
+      "gray_world_color__lab_l_median",
+      "gray_world_color__lab_l_std",
+      "gray_world_color__lab_l_min",
+      "gray_world_color__lab_l_max",
+      "gray_world_color__lab_l_p10",
+      "gray_world_color__lab_l_p25",
+      "gray_world_color__lab_l_p50",
+      "gray_world_color__lab_l_p75",
+      "gray_world_color__lab_l_p90",
+      "gray_world_color__lab_a_mean",
+      "gray_world_color__lab_a_median",
+      "gray_world_color__lab_a_std",
+      "gray_world_color__lab_a_min",
+      "gray_world_color__lab_a_max",
+      "gray_world_color__lab_a_p10",
+      "gray_world_color__lab_a_p25",
+      "gray_world_color__lab_a_p50",
+      "gray_world_color__lab_a_p75",
+      "gray_world_color__lab_a_p90",
+      "gray_world_color__lab_b_mean",
+      "gray_world_color__lab_b_median",
+      "gray_world_color__lab_b_std",
+      "gray_world_color__lab_b_min",
+      "gray_world_color__lab_b_max",
+      "gray_world_color__lab_b_p10",
+      "gray_world_color__lab_b_p25",
+      "gray_world_color__lab_b_p50",
+      "gray_world_color__lab_b_p75",
+      "gray_world_color__lab_b_p90",
+      "gray_world_color__hsv_h_circular_mean",
+      "gray_world_color__hsv_h_circular_resultant",
+      "gray_world_color__green_fraction",
+      "gray_world_color__yellow_fraction",
+      "gray_world_color__orange_fraction",
+      "gray_world_color__fruit_area_fraction"
+    ],
+    "defect": [
+      "original_color__hsv_h_mean",
+      "original_color__hsv_h_median",
+      "original_color__hsv_h_std",
+      "original_color__hsv_h_min",
+      "original_color__hsv_h_max",
+      "original_color__hsv_h_p10",
+      "original_color__hsv_h_p25",
+      "original_color__hsv_h_p50",
+      "original_color__hsv_h_p75",
+      "original_color__hsv_h_p90",
+      "original_color__hsv_s_mean",
+      "original_color__hsv_s_median",
+      "original_color__hsv_s_std",
+      "original_color__hsv_s_min",
+      "original_color__hsv_s_max",
+      "original_color__hsv_s_p10",
+      "original_color__hsv_s_p25",
+      "original_color__hsv_s_p50",
+      "original_color__hsv_s_p75",
+      "original_color__hsv_s_p90",
+      "original_color__hsv_v_mean",
+      "original_color__hsv_v_median",
+      "original_color__hsv_v_std",
+      "original_color__hsv_v_min",
+      "original_color__hsv_v_max",
+      "original_color__hsv_v_p10",
+      "original_color__hsv_v_p25",
+      "original_color__hsv_v_p50",
+      "original_color__hsv_v_p75",
+      "original_color__hsv_v_p90",
+      "original_color__lab_l_mean",
+      "original_color__lab_l_median",
+      "original_color__lab_l_std",
+      "original_color__lab_l_min",
+      "original_color__lab_l_max",
+      "original_color__lab_l_p10",
+      "original_color__lab_l_p25",
+      "original_color__lab_l_p50",
+      "original_color__lab_l_p75",
+      "original_color__lab_l_p90",
+      "original_color__lab_a_mean",
+      "original_color__lab_a_median",
+      "original_color__lab_a_std",
+      "original_color__lab_a_min",
+      "original_color__lab_a_max",
+      "original_color__lab_a_p10",
+      "original_color__lab_a_p25",
+      "original_color__lab_a_p50",
+      "original_color__lab_a_p75",
+      "original_color__lab_a_p90",
+      "original_color__lab_b_mean",
+      "original_color__lab_b_median",
+      "original_color__lab_b_std",
+      "original_color__lab_b_min",
+      "original_color__lab_b_max",
+      "original_color__lab_b_p10",
+      "original_color__lab_b_p25",
+      "original_color__lab_b_p50",
+      "original_color__lab_b_p75",
+      "original_color__lab_b_p90",
+      "original_color__hsv_h_circular_mean",
+      "original_color__hsv_h_circular_resultant",
+      "original_color__green_fraction",
+      "original_color__yellow_fraction",
+      "original_color__orange_fraction",
+      "original_color__fruit_area_fraction",
+      "gray_world_color__hsv_h_mean",
+      "gray_world_color__hsv_h_median",
+      "gray_world_color__hsv_h_std",
+      "gray_world_color__hsv_h_min",
+      "gray_world_color__hsv_h_max",
+      "gray_world_color__hsv_h_p10",
+      "gray_world_color__hsv_h_p25",
+      "gray_world_color__hsv_h_p50",
+      "gray_world_color__hsv_h_p75",
+      "gray_world_color__hsv_h_p90",
+      "gray_world_color__hsv_s_mean",
+      "gray_world_color__hsv_s_median",
+      "gray_world_color__hsv_s_std",
+      "gray_world_color__hsv_s_min",
+      "gray_world_color__hsv_s_max",
+      "gray_world_color__hsv_s_p10",
+      "gray_world_color__hsv_s_p25",
+      "gray_world_color__hsv_s_p50",
+      "gray_world_color__hsv_s_p75",
+      "gray_world_color__hsv_s_p90",
+      "gray_world_color__hsv_v_mean",
+      "gray_world_color__hsv_v_median",
+      "gray_world_color__hsv_v_std",
+      "gray_world_color__hsv_v_min",
+      "gray_world_color__hsv_v_max",
+      "gray_world_color__hsv_v_p10",
+      "gray_world_color__hsv_v_p25",
+      "gray_world_color__hsv_v_p50",
+      "gray_world_color__hsv_v_p75",
+      "gray_world_color__hsv_v_p90",
+      "gray_world_color__lab_l_mean",
+      "gray_world_color__lab_l_median",
+      "gray_world_color__lab_l_std",
+      "gray_world_color__lab_l_min",
+      "gray_world_color__lab_l_max",
+      "gray_world_color__lab_l_p10",
+      "gray_world_color__lab_l_p25",
+      "gray_world_color__lab_l_p50",
+      "gray_world_color__lab_l_p75",
+      "gray_world_color__lab_l_p90",
+      "gray_world_color__lab_a_mean",
+      "gray_world_color__lab_a_median",
+      "gray_world_color__lab_a_std",
+      "gray_world_color__lab_a_min",
+      "gray_world_color__lab_a_max",
+      "gray_world_color__lab_a_p10",
+      "gray_world_color__lab_a_p25",
+      "gray_world_color__lab_a_p50",
+      "gray_world_color__lab_a_p75",
+      "gray_world_color__lab_a_p90",
+      "gray_world_color__lab_b_mean",
+      "gray_world_color__lab_b_median",
+      "gray_world_color__lab_b_std",
+      "gray_world_color__lab_b_min",
+      "gray_world_color__lab_b_max",
+      "gray_world_color__lab_b_p10",
+      "gray_world_color__lab_b_p25",
+      "gray_world_color__lab_b_p50",
+      "gray_world_color__lab_b_p75",
+      "gray_world_color__lab_b_p90",
+      "gray_world_color__hsv_h_circular_mean",
+      "gray_world_color__hsv_h_circular_resultant",
+      "gray_world_color__green_fraction",
+      "gray_world_color__yellow_fraction",
+      "gray_world_color__orange_fraction",
+      "gray_world_color__fruit_area_fraction",
+      "original_lab_k3__detected_suspicious",
+      "original_lab_k3__suspicious_cluster_count",
+      "original_lab_k3__suspicious_area_fraction",
+      "original_lab_k3__dominant_cluster_fraction",
+      "original_lab_k3__selected_mean_color_distance",
+      "original_lab_k3__selected_mean_brightness_delta",
+      "original_lab_k3__selected_mean_suspicion_score",
+      "original_lab_k3__selected_mean_continuity",
+      "original_lab_k3__selected_max_suspicion_score",
+      "original_lab_k3__selected_max_component_fraction",
+      "original_lab_k3__region_hsv_h_circular_mean",
+      "original_lab_k3__region_hsv_h_circular_resultant",
+      "original_lab_k3__region_hsv_s_mean",
+      "original_lab_k3__region_hsv_v_mean",
+      "original_lab_k3__region_lab_l_mean",
+      "original_lab_k3__region_lab_a_mean",
+      "original_lab_k3__region_lab_b_mean",
+      "gray_world_lab_k3__detected_suspicious",
+      "gray_world_lab_k3__suspicious_cluster_count",
+      "gray_world_lab_k3__suspicious_area_fraction",
+      "gray_world_lab_k3__dominant_cluster_fraction",
+      "gray_world_lab_k3__selected_mean_color_distance",
+      "gray_world_lab_k3__selected_mean_brightness_delta",
+      "gray_world_lab_k3__selected_mean_suspicion_score",
+      "gray_world_lab_k3__selected_mean_continuity",
+      "gray_world_lab_k3__selected_max_suspicion_score",
+      "gray_world_lab_k3__selected_max_component_fraction",
+      "gray_world_lab_k3__region_hsv_h_circular_mean",
+      "gray_world_lab_k3__region_hsv_h_circular_resultant",
+      "gray_world_lab_k3__region_hsv_s_mean",
+      "gray_world_lab_k3__region_hsv_v_mean",
+      "gray_world_lab_k3__region_lab_l_mean",
+      "gray_world_lab_k3__region_lab_a_mean",
+      "gray_world_lab_k3__region_lab_b_mean",
+      "original_hsv_k5__detected_suspicious",
+      "original_hsv_k5__suspicious_cluster_count",
+      "original_hsv_k5__suspicious_area_fraction",
+      "original_hsv_k5__dominant_cluster_fraction",
+      "original_hsv_k5__selected_mean_color_distance",
+      "original_hsv_k5__selected_mean_brightness_delta",
+      "original_hsv_k5__selected_mean_suspicion_score",
+      "original_hsv_k5__selected_mean_continuity",
+      "original_hsv_k5__selected_max_suspicion_score",
+      "original_hsv_k5__selected_max_component_fraction",
+      "original_hsv_k5__region_hsv_h_circular_mean",
+      "original_hsv_k5__region_hsv_h_circular_resultant",
+      "original_hsv_k5__region_hsv_s_mean",
+      "original_hsv_k5__region_hsv_v_mean",
+      "original_hsv_k5__region_lab_l_mean",
+      "original_hsv_k5__region_lab_a_mean",
+      "original_hsv_k5__region_lab_b_mean",
+      "gray_world_hsv_k5__detected_suspicious",
+      "gray_world_hsv_k5__suspicious_cluster_count",
+      "gray_world_hsv_k5__suspicious_area_fraction",
+      "gray_world_hsv_k5__dominant_cluster_fraction",
+      "gray_world_hsv_k5__selected_mean_color_distance",
+      "gray_world_hsv_k5__selected_mean_brightness_delta",
+      "gray_world_hsv_k5__selected_mean_suspicion_score",
+      "gray_world_hsv_k5__selected_mean_continuity",
+      "gray_world_hsv_k5__selected_max_suspicion_score",
+      "gray_world_hsv_k5__selected_max_component_fraction",
+      "gray_world_hsv_k5__region_hsv_h_circular_mean",
+      "gray_world_hsv_k5__region_hsv_h_circular_resultant",
+      "gray_world_hsv_k5__region_hsv_s_mean",
+      "gray_world_hsv_k5__region_hsv_v_mean",
+      "gray_world_hsv_k5__region_lab_l_mean",
+      "gray_world_hsv_k5__region_lab_a_mean",
+      "gray_world_hsv_k5__region_lab_b_mean"
+    ]
+  },
+  "feature_sets": {
+    "ripeness": {
+      "original_color": [
+        "original_color__hsv_h_mean",
+        "original_color__hsv_h_median",
+        "original_color__hsv_h_std",
+        "original_color__hsv_h_min",
+        "original_color__hsv_h_max",
+        "original_color__hsv_h_p10",
+        "original_color__hsv_h_p25",
+        "original_color__hsv_h_p50",
+        "original_color__hsv_h_p75",
+        "original_color__hsv_h_p90",
+        "original_color__hsv_s_mean",
+        "original_color__hsv_s_median",
+        "original_color__hsv_s_std",
+        "original_color__hsv_s_min",
+        "original_color__hsv_s_max",
+        "original_color__hsv_s_p10",
+        "original_color__hsv_s_p25",
+        "original_color__hsv_s_p50",
+        "original_color__hsv_s_p75",
+        "original_color__hsv_s_p90",
+        "original_color__hsv_v_mean",
+        "original_color__hsv_v_median",
+        "original_color__hsv_v_std",
+        "original_color__hsv_v_min",
+        "original_color__hsv_v_max",
+        "original_color__hsv_v_p10",
+        "original_color__hsv_v_p25",
+        "original_color__hsv_v_p50",
+        "original_color__hsv_v_p75",
+        "original_color__hsv_v_p90",
+        "original_color__lab_l_mean",
+        "original_color__lab_l_median",
+        "original_color__lab_l_std",
+        "original_color__lab_l_min",
+        "original_color__lab_l_max",
+        "original_color__lab_l_p10",
+        "original_color__lab_l_p25",
+        "original_color__lab_l_p50",
+        "original_color__lab_l_p75",
+        "original_color__lab_l_p90",
+        "original_color__lab_a_mean",
+        "original_color__lab_a_median",
+        "original_color__lab_a_std",
+        "original_color__lab_a_min",
+        "original_color__lab_a_max",
+        "original_color__lab_a_p10",
+        "original_color__lab_a_p25",
+        "original_color__lab_a_p50",
+        "original_color__lab_a_p75",
+        "original_color__lab_a_p90",
+        "original_color__lab_b_mean",
+        "original_color__lab_b_median",
+        "original_color__lab_b_std",
+        "original_color__lab_b_min",
+        "original_color__lab_b_max",
+        "original_color__lab_b_p10",
+        "original_color__lab_b_p25",
+        "original_color__lab_b_p50",
+        "original_color__lab_b_p75",
+        "original_color__lab_b_p90",
+        "original_color__hsv_h_circular_mean",
+        "original_color__hsv_h_circular_resultant",
+        "original_color__green_fraction",
+        "original_color__yellow_fraction",
+        "original_color__orange_fraction",
+        "original_color__fruit_area_fraction"
+      ],
+      "gray_world_color": [
+        "gray_world_color__hsv_h_mean",
+        "gray_world_color__hsv_h_median",
+        "gray_world_color__hsv_h_std",
+        "gray_world_color__hsv_h_min",
+        "gray_world_color__hsv_h_max",
+        "gray_world_color__hsv_h_p10",
+        "gray_world_color__hsv_h_p25",
+        "gray_world_color__hsv_h_p50",
+        "gray_world_color__hsv_h_p75",
+        "gray_world_color__hsv_h_p90",
+        "gray_world_color__hsv_s_mean",
+        "gray_world_color__hsv_s_median",
+        "gray_world_color__hsv_s_std",
+        "gray_world_color__hsv_s_min",
+        "gray_world_color__hsv_s_max",
+        "gray_world_color__hsv_s_p10",
+        "gray_world_color__hsv_s_p25",
+        "gray_world_color__hsv_s_p50",
+        "gray_world_color__hsv_s_p75",
+        "gray_world_color__hsv_s_p90",
+        "gray_world_color__hsv_v_mean",
+        "gray_world_color__hsv_v_median",
+        "gray_world_color__hsv_v_std",
+        "gray_world_color__hsv_v_min",
+        "gray_world_color__hsv_v_max",
+        "gray_world_color__hsv_v_p10",
+        "gray_world_color__hsv_v_p25",
+        "gray_world_color__hsv_v_p50",
+        "gray_world_color__hsv_v_p75",
+        "gray_world_color__hsv_v_p90",
+        "gray_world_color__lab_l_mean",
+        "gray_world_color__lab_l_median",
+        "gray_world_color__lab_l_std",
+        "gray_world_color__lab_l_min",
+        "gray_world_color__lab_l_max",
+        "gray_world_color__lab_l_p10",
+        "gray_world_color__lab_l_p25",
+        "gray_world_color__lab_l_p50",
+        "gray_world_color__lab_l_p75",
+        "gray_world_color__lab_l_p90",
+        "gray_world_color__lab_a_mean",
+        "gray_world_color__lab_a_median",
+        "gray_world_color__lab_a_std",
+        "gray_world_color__lab_a_min",
+        "gray_world_color__lab_a_max",
+        "gray_world_color__lab_a_p10",
+        "gray_world_color__lab_a_p25",
+        "gray_world_color__lab_a_p50",
+        "gray_world_color__lab_a_p75",
+        "gray_world_color__lab_a_p90",
+        "gray_world_color__lab_b_mean",
+        "gray_world_color__lab_b_median",
+        "gray_world_color__lab_b_std",
+        "gray_world_color__lab_b_min",
+        "gray_world_color__lab_b_max",
+        "gray_world_color__lab_b_p10",
+        "gray_world_color__lab_b_p25",
+        "gray_world_color__lab_b_p50",
+        "gray_world_color__lab_b_p75",
+        "gray_world_color__lab_b_p90",
+        "gray_world_color__hsv_h_circular_mean",
+        "gray_world_color__hsv_h_circular_resultant",
+        "gray_world_color__green_fraction",
+        "gray_world_color__yellow_fraction",
+        "gray_world_color__orange_fraction",
+        "gray_world_color__fruit_area_fraction"
+      ]
+    },
+    "defect": {
+      "original_color": [
+        "original_color__hsv_h_mean",
+        "original_color__hsv_h_median",
+        "original_color__hsv_h_std",
+        "original_color__hsv_h_min",
+        "original_color__hsv_h_max",
+        "original_color__hsv_h_p10",
+        "original_color__hsv_h_p25",
+        "original_color__hsv_h_p50",
+        "original_color__hsv_h_p75",
+        "original_color__hsv_h_p90",
+        "original_color__hsv_s_mean",
+        "original_color__hsv_s_median",
+        "original_color__hsv_s_std",
+        "original_color__hsv_s_min",
+        "original_color__hsv_s_max",
+        "original_color__hsv_s_p10",
+        "original_color__hsv_s_p25",
+        "original_color__hsv_s_p50",
+        "original_color__hsv_s_p75",
+        "original_color__hsv_s_p90",
+        "original_color__hsv_v_mean",
+        "original_color__hsv_v_median",
+        "original_color__hsv_v_std",
+        "original_color__hsv_v_min",
+        "original_color__hsv_v_max",
+        "original_color__hsv_v_p10",
+        "original_color__hsv_v_p25",
+        "original_color__hsv_v_p50",
+        "original_color__hsv_v_p75",
+        "original_color__hsv_v_p90",
+        "original_color__lab_l_mean",
+        "original_color__lab_l_median",
+        "original_color__lab_l_std",
+        "original_color__lab_l_min",
+        "original_color__lab_l_max",
+        "original_color__lab_l_p10",
+        "original_color__lab_l_p25",
+        "original_color__lab_l_p50",
+        "original_color__lab_l_p75",
+        "original_color__lab_l_p90",
+        "original_color__lab_a_mean",
+        "original_color__lab_a_median",
+        "original_color__lab_a_std",
+        "original_color__lab_a_min",
+        "original_color__lab_a_max",
+        "original_color__lab_a_p10",
+        "original_color__lab_a_p25",
+        "original_color__lab_a_p50",
+        "original_color__lab_a_p75",
+        "original_color__lab_a_p90",
+        "original_color__lab_b_mean",
+        "original_color__lab_b_median",
+        "original_color__lab_b_std",
+        "original_color__lab_b_min",
+        "original_color__lab_b_max",
+        "original_color__lab_b_p10",
+        "original_color__lab_b_p25",
+        "original_color__lab_b_p50",
+        "original_color__lab_b_p75",
+        "original_color__lab_b_p90",
+        "original_color__hsv_h_circular_mean",
+        "original_color__hsv_h_circular_resultant",
+        "original_color__green_fraction",
+        "original_color__yellow_fraction",
+        "original_color__orange_fraction",
+        "original_color__fruit_area_fraction"
+      ],
+      "gray_world_color": [
+        "gray_world_color__hsv_h_mean",
+        "gray_world_color__hsv_h_median",
+        "gray_world_color__hsv_h_std",
+        "gray_world_color__hsv_h_min",
+        "gray_world_color__hsv_h_max",
+        "gray_world_color__hsv_h_p10",
+        "gray_world_color__hsv_h_p25",
+        "gray_world_color__hsv_h_p50",
+        "gray_world_color__hsv_h_p75",
+        "gray_world_color__hsv_h_p90",
+        "gray_world_color__hsv_s_mean",
+        "gray_world_color__hsv_s_median",
+        "gray_world_color__hsv_s_std",
+        "gray_world_color__hsv_s_min",
+        "gray_world_color__hsv_s_max",
+        "gray_world_color__hsv_s_p10",
+        "gray_world_color__hsv_s_p25",
+        "gray_world_color__hsv_s_p50",
+        "gray_world_color__hsv_s_p75",
+        "gray_world_color__hsv_s_p90",
+        "gray_world_color__hsv_v_mean",
+        "gray_world_color__hsv_v_median",
+        "gray_world_color__hsv_v_std",
+        "gray_world_color__hsv_v_min",
+        "gray_world_color__hsv_v_max",
+        "gray_world_color__hsv_v_p10",
+        "gray_world_color__hsv_v_p25",
+        "gray_world_color__hsv_v_p50",
+        "gray_world_color__hsv_v_p75",
+        "gray_world_color__hsv_v_p90",
+        "gray_world_color__lab_l_mean",
+        "gray_world_color__lab_l_median",
+        "gray_world_color__lab_l_std",
+        "gray_world_color__lab_l_min",
+        "gray_world_color__lab_l_max",
+        "gray_world_color__lab_l_p10",
+        "gray_world_color__lab_l_p25",
+        "gray_world_color__lab_l_p50",
+        "gray_world_color__lab_l_p75",
+        "gray_world_color__lab_l_p90",
+        "gray_world_color__lab_a_mean",
+        "gray_world_color__lab_a_median",
+        "gray_world_color__lab_a_std",
+        "gray_world_color__lab_a_min",
+        "gray_world_color__lab_a_max",
+        "gray_world_color__lab_a_p10",
+        "gray_world_color__lab_a_p25",
+        "gray_world_color__lab_a_p50",
+        "gray_world_color__lab_a_p75",
+        "gray_world_color__lab_a_p90",
+        "gray_world_color__lab_b_mean",
+        "gray_world_color__lab_b_median",
+        "gray_world_color__lab_b_std",
+        "gray_world_color__lab_b_min",
+        "gray_world_color__lab_b_max",
+        "gray_world_color__lab_b_p10",
+        "gray_world_color__lab_b_p25",
+        "gray_world_color__lab_b_p50",
+        "gray_world_color__lab_b_p75",
+        "gray_world_color__lab_b_p90",
+        "gray_world_color__hsv_h_circular_mean",
+        "gray_world_color__hsv_h_circular_resultant",
+        "gray_world_color__green_fraction",
+        "gray_world_color__yellow_fraction",
+        "gray_world_color__orange_fraction",
+        "gray_world_color__fruit_area_fraction"
+      ],
+      "original_lab_k3": [
+        "original_lab_k3__detected_suspicious",
+        "original_lab_k3__suspicious_cluster_count",
+        "original_lab_k3__suspicious_area_fraction",
+        "original_lab_k3__dominant_cluster_fraction",
+        "original_lab_k3__selected_mean_color_distance",
+        "original_lab_k3__selected_mean_brightness_delta",
+        "original_lab_k3__selected_mean_suspicion_score",
+        "original_lab_k3__selected_mean_continuity",
+        "original_lab_k3__selected_max_suspicion_score",
+        "original_lab_k3__selected_max_component_fraction",
+        "original_lab_k3__region_hsv_h_circular_mean",
+        "original_lab_k3__region_hsv_h_circular_resultant",
+        "original_lab_k3__region_hsv_s_mean",
+        "original_lab_k3__region_hsv_v_mean",
+        "original_lab_k3__region_lab_l_mean",
+        "original_lab_k3__region_lab_a_mean",
+        "original_lab_k3__region_lab_b_mean"
+      ],
+      "gray_world_lab_k3": [
+        "gray_world_lab_k3__detected_suspicious",
+        "gray_world_lab_k3__suspicious_cluster_count",
+        "gray_world_lab_k3__suspicious_area_fraction",
+        "gray_world_lab_k3__dominant_cluster_fraction",
+        "gray_world_lab_k3__selected_mean_color_distance",
+        "gray_world_lab_k3__selected_mean_brightness_delta",
+        "gray_world_lab_k3__selected_mean_suspicion_score",
+        "gray_world_lab_k3__selected_mean_continuity",
+        "gray_world_lab_k3__selected_max_suspicion_score",
+        "gray_world_lab_k3__selected_max_component_fraction",
+        "gray_world_lab_k3__region_hsv_h_circular_mean",
+        "gray_world_lab_k3__region_hsv_h_circular_resultant",
+        "gray_world_lab_k3__region_hsv_s_mean",
+        "gray_world_lab_k3__region_hsv_v_mean",
+        "gray_world_lab_k3__region_lab_l_mean",
+        "gray_world_lab_k3__region_lab_a_mean",
+        "gray_world_lab_k3__region_lab_b_mean"
+      ],
+      "original_hsv_k5": [
+        "original_hsv_k5__detected_suspicious",
+        "original_hsv_k5__suspicious_cluster_count",
+        "original_hsv_k5__suspicious_area_fraction",
+        "original_hsv_k5__dominant_cluster_fraction",
+        "original_hsv_k5__selected_mean_color_distance",
+        "original_hsv_k5__selected_mean_brightness_delta",
+        "original_hsv_k5__selected_mean_suspicion_score",
+        "original_hsv_k5__selected_mean_continuity",
+        "original_hsv_k5__selected_max_suspicion_score",
+        "original_hsv_k5__selected_max_component_fraction",
+        "original_hsv_k5__region_hsv_h_circular_mean",
+        "original_hsv_k5__region_hsv_h_circular_resultant",
+        "original_hsv_k5__region_hsv_s_mean",
+        "original_hsv_k5__region_hsv_v_mean",
+        "original_hsv_k5__region_lab_l_mean",
+        "original_hsv_k5__region_lab_a_mean",
+        "original_hsv_k5__region_lab_b_mean"
+      ],
+      "gray_world_hsv_k5": [
+        "gray_world_hsv_k5__detected_suspicious",
+        "gray_world_hsv_k5__suspicious_cluster_count",
+        "gray_world_hsv_k5__suspicious_area_fraction",
+        "gray_world_hsv_k5__dominant_cluster_fraction",
+        "gray_world_hsv_k5__selected_mean_color_distance",
+        "gray_world_hsv_k5__selected_mean_brightness_delta",
+        "gray_world_hsv_k5__selected_mean_suspicion_score",
+        "gray_world_hsv_k5__selected_mean_continuity",
+        "gray_world_hsv_k5__selected_max_suspicion_score",
+        "gray_world_hsv_k5__selected_max_component_fraction",
+        "gray_world_hsv_k5__region_hsv_h_circular_mean",
+        "gray_world_hsv_k5__region_hsv_h_circular_resultant",
+        "gray_world_hsv_k5__region_hsv_s_mean",
+        "gray_world_hsv_k5__region_hsv_v_mean",
+        "gray_world_hsv_k5__region_lab_l_mean",
+        "gray_world_hsv_k5__region_lab_a_mean",
+        "gray_world_hsv_k5__region_lab_b_mean"
+      ]
+    }
+  },
+  "feature_counts": {
+    "ripeness": 132,
+    "defect": 200
+  },
+  "feature_definitions": {
+    "original_color__hsv_h_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_s_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_v_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_l_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_a_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_median": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_std": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_min": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_max": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_p10": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_p25": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_p50": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_p75": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__lab_b_p90": {
+      "feature_set": "original_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "original_color__hsv_h_circular_mean": {
+      "feature_set": "original_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Circular hue statistic in HSV for accepted fruit-mask pixels."
+    },
+    "original_color__hsv_h_circular_resultant": {
+      "feature_set": "original_color",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Circular hue statistic in HSV for accepted fruit-mask pixels."
+    },
+    "original_color__green_fraction": {
+      "feature_set": "original_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured green HSV hue range."
+    },
+    "original_color__yellow_fraction": {
+      "feature_set": "original_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured yellow HSV hue range."
+    },
+    "original_color__orange_fraction": {
+      "feature_set": "original_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured orange HSV hue range."
+    },
+    "original_color__fruit_area_fraction": {
+      "feature_set": "original_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fruit-mask area divided by visible analysis-raster area."
+    },
+    "gray_world_color__hsv_h_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_s_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_v_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,1]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_l_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "[0,100]",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_a_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_median": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_std": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_min": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_max": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_p10": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_p25": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_p50": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_p75": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__lab_b_p90": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Configured channel statistic over accepted fruit-mask pixels; statistic is encoded in the column suffix."
+    },
+    "gray_world_color__hsv_h_circular_mean": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Circular hue statistic in HSV for accepted fruit-mask pixels."
+    },
+    "gray_world_color__hsv_h_circular_resultant": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Circular hue statistic in HSV for accepted fruit-mask pixels."
+    },
+    "gray_world_color__green_fraction": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured green HSV hue range."
+    },
+    "gray_world_color__yellow_fraction": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured yellow HSV hue range."
+    },
+    "gray_world_color__orange_fraction": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fraction of accepted fruit-mask pixels in configured orange HSV hue range."
+    },
+    "gray_world_color__fruit_area_fraction": {
+      "feature_set": "gray_world_color",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Fruit-mask area divided by visible analysis-raster area."
+    },
+    "original_lab_k3__detected_suspicious": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "binary indicator [0,1]",
+      "description": "Whether Phase 3 selected at least one suspicious cluster."
+    },
+    "original_lab_k3__suspicious_cluster_count": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "count",
+      "description": "Number of Phase 3 selected suspicious clusters."
+    },
+    "original_lab_k3__suspicious_area_fraction": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Selected suspicious K-Means pixels divided by accepted fruit-mask pixels."
+    },
+    "original_lab_k3__dominant_cluster_fraction": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest K-Means cluster area divided by accepted fruit-mask pixels."
+    },
+    "original_lab_k3__selected_mean_color_distance": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_lab_k3__selected_mean_brightness_delta": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_lab_k3__selected_mean_suspicion_score": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_lab_k3__selected_mean_continuity": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_lab_k3__selected_max_suspicion_score": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_lab_k3__selected_max_component_fraction": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest selected connected component divided by accepted fruit-mask pixels."
+    },
+    "original_lab_k3__region_hsv_h_circular_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_hsv_h_circular_resultant": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_hsv_s_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_hsv_v_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_lab_l_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "[0,100]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_lab_a_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_lab_k3__region_lab_b_mean": {
+      "feature_set": "original_lab_k3",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__detected_suspicious": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "binary indicator [0,1]",
+      "description": "Whether Phase 3 selected at least one suspicious cluster."
+    },
+    "gray_world_lab_k3__suspicious_cluster_count": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "count",
+      "description": "Number of Phase 3 selected suspicious clusters."
+    },
+    "gray_world_lab_k3__suspicious_area_fraction": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Selected suspicious K-Means pixels divided by accepted fruit-mask pixels."
+    },
+    "gray_world_lab_k3__dominant_cluster_fraction": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest K-Means cluster area divided by accepted fruit-mask pixels."
+    },
+    "gray_world_lab_k3__selected_mean_color_distance": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_lab_k3__selected_mean_brightness_delta": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_lab_k3__selected_mean_suspicion_score": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_lab_k3__selected_mean_continuity": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_lab_k3__selected_max_suspicion_score": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_lab_k3__selected_max_component_fraction": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest selected connected component divided by accepted fruit-mask pixels."
+    },
+    "gray_world_lab_k3__region_hsv_h_circular_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_hsv_h_circular_resultant": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_hsv_s_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_hsv_v_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_lab_l_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "[0,100]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_lab_a_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_lab_k3__region_lab_b_mean": {
+      "feature_set": "gray_world_lab_k3",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__detected_suspicious": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "binary indicator [0,1]",
+      "description": "Whether Phase 3 selected at least one suspicious cluster."
+    },
+    "original_hsv_k5__suspicious_cluster_count": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "count",
+      "description": "Number of Phase 3 selected suspicious clusters."
+    },
+    "original_hsv_k5__suspicious_area_fraction": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Selected suspicious K-Means pixels divided by accepted fruit-mask pixels."
+    },
+    "original_hsv_k5__dominant_cluster_fraction": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest K-Means cluster area divided by accepted fruit-mask pixels."
+    },
+    "original_hsv_k5__selected_mean_color_distance": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_hsv_k5__selected_mean_brightness_delta": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_hsv_k5__selected_mean_suspicion_score": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_hsv_k5__selected_mean_continuity": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_hsv_k5__selected_max_suspicion_score": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "original_hsv_k5__selected_max_component_fraction": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest selected connected component divided by accepted fruit-mask pixels."
+    },
+    "original_hsv_k5__region_hsv_h_circular_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_hsv_h_circular_resultant": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_hsv_s_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_hsv_v_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_lab_l_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "[0,100]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_lab_a_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "original_hsv_k5__region_lab_b_mean": {
+      "feature_set": "original_hsv_k5",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__detected_suspicious": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "binary indicator [0,1]",
+      "description": "Whether Phase 3 selected at least one suspicious cluster."
+    },
+    "gray_world_hsv_k5__suspicious_cluster_count": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "count",
+      "description": "Number of Phase 3 selected suspicious clusters."
+    },
+    "gray_world_hsv_k5__suspicious_area_fraction": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Selected suspicious K-Means pixels divided by accepted fruit-mask pixels."
+    },
+    "gray_world_hsv_k5__dominant_cluster_fraction": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest K-Means cluster area divided by accepted fruit-mask pixels."
+    },
+    "gray_world_hsv_k5__selected_mean_color_distance": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_hsv_k5__selected_mean_brightness_delta": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_hsv_k5__selected_mean_suspicion_score": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_hsv_k5__selected_mean_continuity": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_hsv_k5__selected_max_suspicion_score": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "pipeline-defined scalar; see feature_origin and Phase 3 selection-rule config",
+      "description": "Aggregate Phase 3 diagnostic for selected suspicious clusters; exact quantity is encoded in the column name."
+    },
+    "gray_world_hsv_k5__selected_max_component_fraction": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "fraction [0,1]",
+      "description": "Largest selected connected component divided by accepted fruit-mask pixels."
+    },
+    "gray_world_hsv_k5__region_hsv_h_circular_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "degrees [0,360)",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_hsv_h_circular_resultant": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "resultant [0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_hsv_s_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_hsv_v_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "[0,1]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_lab_l_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "[0,100]",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_lab_a_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    },
+    "gray_world_hsv_k5__region_lab_b_mean": {
+      "feature_set": "gray_world_hsv_k5",
+      "unit_or_scale": "signed CIELAB units",
+      "description": "Color statistic within Phase 3 predicted suspicious pixels intersected with the accepted fruit mask."
+    }
+  },
+  "all_feature_columns": [
+    "gray_world_color__fruit_area_fraction",
+    "gray_world_color__green_fraction",
+    "gray_world_color__hsv_h_circular_mean",
+    "gray_world_color__hsv_h_circular_resultant",
+    "gray_world_color__hsv_h_max",
+    "gray_world_color__hsv_h_mean",
+    "gray_world_color__hsv_h_median",
+    "gray_world_color__hsv_h_min",
+    "gray_world_color__hsv_h_p10",
+    "gray_world_color__hsv_h_p25",
+    "gray_world_color__hsv_h_p50",
+    "gray_world_color__hsv_h_p75",
+    "gray_world_color__hsv_h_p90",
+    "gray_world_color__hsv_h_std",
+    "gray_world_color__hsv_s_max",
+    "gray_world_color__hsv_s_mean",
+    "gray_world_color__hsv_s_median",
+    "gray_world_color__hsv_s_min",
+    "gray_world_color__hsv_s_p10",
+    "gray_world_color__hsv_s_p25",
+    "gray_world_color__hsv_s_p50",
+    "gray_world_color__hsv_s_p75",
+    "gray_world_color__hsv_s_p90",
+    "gray_world_color__hsv_s_std",
+    "gray_world_color__hsv_v_max",
+    "gray_world_color__hsv_v_mean",
+    "gray_world_color__hsv_v_median",
+    "gray_world_color__hsv_v_min",
+    "gray_world_color__hsv_v_p10",
+    "gray_world_color__hsv_v_p25",
+    "gray_world_color__hsv_v_p50",
+    "gray_world_color__hsv_v_p75",
+    "gray_world_color__hsv_v_p90",
+    "gray_world_color__hsv_v_std",
+    "gray_world_color__lab_a_max",
+    "gray_world_color__lab_a_mean",
+    "gray_world_color__lab_a_median",
+    "gray_world_color__lab_a_min",
+    "gray_world_color__lab_a_p10",
+    "gray_world_color__lab_a_p25",
+    "gray_world_color__lab_a_p50",
+    "gray_world_color__lab_a_p75",
+    "gray_world_color__lab_a_p90",
+    "gray_world_color__lab_a_std",
+    "gray_world_color__lab_b_max",
+    "gray_world_color__lab_b_mean",
+    "gray_world_color__lab_b_median",
+    "gray_world_color__lab_b_min",
+    "gray_world_color__lab_b_p10",
+    "gray_world_color__lab_b_p25",
+    "gray_world_color__lab_b_p50",
+    "gray_world_color__lab_b_p75",
+    "gray_world_color__lab_b_p90",
+    "gray_world_color__lab_b_std",
+    "gray_world_color__lab_l_max",
+    "gray_world_color__lab_l_mean",
+    "gray_world_color__lab_l_median",
+    "gray_world_color__lab_l_min",
+    "gray_world_color__lab_l_p10",
+    "gray_world_color__lab_l_p25",
+    "gray_world_color__lab_l_p50",
+    "gray_world_color__lab_l_p75",
+    "gray_world_color__lab_l_p90",
+    "gray_world_color__lab_l_std",
+    "gray_world_color__orange_fraction",
+    "gray_world_color__yellow_fraction",
+    "gray_world_hsv_k5__detected_suspicious",
+    "gray_world_hsv_k5__dominant_cluster_fraction",
+    "gray_world_hsv_k5__region_hsv_h_circular_mean",
+    "gray_world_hsv_k5__region_hsv_h_circular_resultant",
+    "gray_world_hsv_k5__region_hsv_s_mean",
+    "gray_world_hsv_k5__region_hsv_v_mean",
+    "gray_world_hsv_k5__region_lab_a_mean",
+    "gray_world_hsv_k5__region_lab_b_mean",
+    "gray_world_hsv_k5__region_lab_l_mean",
+    "gray_world_hsv_k5__selected_max_component_fraction",
+    "gray_world_hsv_k5__selected_max_suspicion_score",
+    "gray_world_hsv_k5__selected_mean_brightness_delta",
+    "gray_world_hsv_k5__selected_mean_color_distance",
+    "gray_world_hsv_k5__selected_mean_continuity",
+    "gray_world_hsv_k5__selected_mean_suspicion_score",
+    "gray_world_hsv_k5__suspicious_area_fraction",
+    "gray_world_hsv_k5__suspicious_cluster_count",
+    "gray_world_lab_k3__detected_suspicious",
+    "gray_world_lab_k3__dominant_cluster_fraction",
+    "gray_world_lab_k3__region_hsv_h_circular_mean",
+    "gray_world_lab_k3__region_hsv_h_circular_resultant",
+    "gray_world_lab_k3__region_hsv_s_mean",
+    "gray_world_lab_k3__region_hsv_v_mean",
+    "gray_world_lab_k3__region_lab_a_mean",
+    "gray_world_lab_k3__region_lab_b_mean",
+    "gray_world_lab_k3__region_lab_l_mean",
+    "gray_world_lab_k3__selected_max_component_fraction",
+    "gray_world_lab_k3__selected_max_suspicion_score",
+    "gray_world_lab_k3__selected_mean_brightness_delta",
+    "gray_world_lab_k3__selected_mean_color_distance",
+    "gray_world_lab_k3__selected_mean_continuity",
+    "gray_world_lab_k3__selected_mean_suspicion_score",
+    "gray_world_lab_k3__suspicious_area_fraction",
+    "gray_world_lab_k3__suspicious_cluster_count",
+    "original_color__fruit_area_fraction",
+    "original_color__green_fraction",
+    "original_color__hsv_h_circular_mean",
+    "original_color__hsv_h_circular_resultant",
+    "original_color__hsv_h_max",
+    "original_color__hsv_h_mean",
+    "original_color__hsv_h_median",
+    "original_color__hsv_h_min",
+    "original_color__hsv_h_p10",
+    "original_color__hsv_h_p25",
+    "original_color__hsv_h_p50",
+    "original_color__hsv_h_p75",
+    "original_color__hsv_h_p90",
+    "original_color__hsv_h_std",
+    "original_color__hsv_s_max",
+    "original_color__hsv_s_mean",
+    "original_color__hsv_s_median",
+    "original_color__hsv_s_min",
+    "original_color__hsv_s_p10",
+    "original_color__hsv_s_p25",
+    "original_color__hsv_s_p50",
+    "original_color__hsv_s_p75",
+    "original_color__hsv_s_p90",
+    "original_color__hsv_s_std",
+    "original_color__hsv_v_max",
+    "original_color__hsv_v_mean",
+    "original_color__hsv_v_median",
+    "original_color__hsv_v_min",
+    "original_color__hsv_v_p10",
+    "original_color__hsv_v_p25",
+    "original_color__hsv_v_p50",
+    "original_color__hsv_v_p75",
+    "original_color__hsv_v_p90",
+    "original_color__hsv_v_std",
+    "original_color__lab_a_max",
+    "original_color__lab_a_mean",
+    "original_color__lab_a_median",
+    "original_color__lab_a_min",
+    "original_color__lab_a_p10",
+    "original_color__lab_a_p25",
+    "original_color__lab_a_p50",
+    "original_color__lab_a_p75",
+    "original_color__lab_a_p90",
+    "original_color__lab_a_std",
+    "original_color__lab_b_max",
+    "original_color__lab_b_mean",
+    "original_color__lab_b_median",
+    "original_color__lab_b_min",
+    "original_color__lab_b_p10",
+    "original_color__lab_b_p25",
+    "original_color__lab_b_p50",
+    "original_color__lab_b_p75",
+    "original_color__lab_b_p90",
+    "original_color__lab_b_std",
+    "original_color__lab_l_max",
+    "original_color__lab_l_mean",
+    "original_color__lab_l_median",
+    "original_color__lab_l_min",
+    "original_color__lab_l_p10",
+    "original_color__lab_l_p25",
+    "original_color__lab_l_p50",
+    "original_color__lab_l_p75",
+    "original_color__lab_l_p90",
+    "original_color__lab_l_std",
+    "original_color__orange_fraction",
+    "original_color__yellow_fraction",
+    "original_hsv_k5__detected_suspicious",
+    "original_hsv_k5__dominant_cluster_fraction",
+    "original_hsv_k5__region_hsv_h_circular_mean",
+    "original_hsv_k5__region_hsv_h_circular_resultant",
+    "original_hsv_k5__region_hsv_s_mean",
+    "original_hsv_k5__region_hsv_v_mean",
+    "original_hsv_k5__region_lab_a_mean",
+    "original_hsv_k5__region_lab_b_mean",
+    "original_hsv_k5__region_lab_l_mean",
+    "original_hsv_k5__selected_max_component_fraction",
+    "original_hsv_k5__selected_max_suspicion_score",
+    "original_hsv_k5__selected_mean_brightness_delta",
+    "original_hsv_k5__selected_mean_color_distance",
+    "original_hsv_k5__selected_mean_continuity",
+    "original_hsv_k5__selected_mean_suspicion_score",
+    "original_hsv_k5__suspicious_area_fraction",
+    "original_hsv_k5__suspicious_cluster_count",
+    "original_lab_k3__detected_suspicious",
+    "original_lab_k3__dominant_cluster_fraction",
+    "original_lab_k3__region_hsv_h_circular_mean",
+    "original_lab_k3__region_hsv_h_circular_resultant",
+    "original_lab_k3__region_hsv_s_mean",
+    "original_lab_k3__region_hsv_v_mean",
+    "original_lab_k3__region_lab_a_mean",
+    "original_lab_k3__region_lab_b_mean",
+    "original_lab_k3__region_lab_l_mean",
+    "original_lab_k3__selected_max_component_fraction",
+    "original_lab_k3__selected_max_suspicion_score",
+    "original_lab_k3__selected_mean_brightness_delta",
+    "original_lab_k3__selected_mean_color_distance",
+    "original_lab_k3__selected_mean_continuity",
+    "original_lab_k3__selected_mean_suspicion_score",
+    "original_lab_k3__suspicious_area_fraction",
+    "original_lab_k3__suspicious_cluster_count"
+  ],
+  "analysis_resolution": {
+    "max_side_pixels": 512,
+    "downsampling": "aspect-preserving OpenCV INTER_AREA; alpha mask uses nearest-neighbor",
+    "raw_source": "raw files are hash-verified and never modified; features use only the analysis raster"
+  },
+  "color_proportion_definition": {
+    "thresholds": {
+      "minimum_saturation": 0.15,
+      "minimum_value": 0.08,
+      "hue_ranges_degrees": {
+        "orange": [
+          15.0,
+          35.0
+        ],
+        "yellow": [
+          35.0,
+          70.0
+        ],
+        "green": [
+          70.0,
+          165.0
+        ]
+      }
+    },
+    "denominator": "pixels within an accepted heuristic fruit mask and visible alpha region",
+    "hue_units": "degrees [0,360); ranges are half-open; hue outside named ranges is not counted"
+  },
+  "color_scales": {
+    "HSV": {
+      "H": "degrees [0,360)",
+      "S": "[0,1]",
+      "V": "[0,1]"
+    },
+    "CIELAB": {
+      "L": "[0,100]",
+      "a": "signed",
+      "b": "signed"
+    }
+  },
+  "feature_origin": {
+    "original_color": "HSV/CIELAB pixel statistics within accepted Phase 2 heuristic fruit mask on original RGB",
+    "gray_world_color": "same statistics after Phase 1 Gray World using its corresponding Phase 2 heuristic fruit mask",
+    "original_lab_k3": "Phase 3 K-Means Lab K=3 on original RGB and accepted heuristic fruit mask",
+    "original_hsv_k5": "Phase 3 K-Means HSV K=5 on original RGB and accepted heuristic fruit mask",
+    "gray_world_lab_k3": "comparative Gray World K-Means Lab K=3 features",
+    "gray_world_hsv_k5": "comparative Gray World K-Means HSV K=5 features"
+  },
+  "missing_values": "Blank CSV cells mean unavailable; no imputation is performed. If a valid K-Means run has no selected cluster, detection/area are 0 while suspicious-region color moments remain blank.",
+  "excluded_from_model_input": [
+    "image_id",
+    "dataset",
+    "task",
+    "label",
+    "phase02_split",
+    "image_path",
+    "source_sha256",
+    "split_risk_status",
+    "official_accuracy_eligible",
+    "all manifest/status fields",
+    "all defect ground-truth mask paths/pixels/metrics",
+    "source filenames and folders"
+  ],
+  "leakage_controls": [
+    "labels, splits, ground-truth masks, and source metadata are never passed to feature functions",
+    "ripeness and defect tables are built from the saved Phase 0.2 split CSVs without modifying them",
+    "defect K-Means branches share one row/image_id and do not multiply training sample count"
+  ],
+  "sample_counts": {
+    "ripeness": 748,
+    "defect": 3604
+  }
+}

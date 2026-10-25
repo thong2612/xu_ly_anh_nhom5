@@ -1,0 +1,234 @@
+project_name: MangoResearch
+data_root: data
+reports_root: reports
+metadata_root: data/metadata
+split:
+  seed: 20261023
+  ratios:
+    train: 0.70
+    validation: 0.15
+    test: 0.15
+
+# Phase 1 processes a deterministic, label-balanced sample from the clean
+# Phase 0.2 manifest. Full color arrays are cached only for these preview samples.
+phase1:
+  manifest_path: data/metadata/phase02_manifest.csv
+  cache_dir: data/processed/phase1_cache
+  output_dir: reports/phase1
+  report_path: reports/phase01_report.md
+  seed: 20261023
+  samples_per_group: 2
+  preview_max_side: 512
+  gray_world_enabled: true
+  abnormal_gain_bounds: [0.7, 1.3]
+  abnormal_clipping_fraction: 0.01
+
+# Phase 2: one-channel threshold/morphology baselines. Outputs are heuristic
+# review candidates only until genuine whole-fruit ground truth is annotated.
+segmentation:
+  manifest_path: data/metadata/phase02_manifest.csv
+  output_dir: reports/phase02_segmentation
+  report_path: reports/phase02_segmentation_report.md
+  cache_dir: data/processed/phase2_cache
+  mask_dir: data/processed/fruit_masks
+  seed: 20261023
+  samples_per_group: 5
+  preview_max_side: 512
+  gray_world_enabled: true
+  candidate_channels: [lab_a, lab_b, hsv_h, hsv_s]
+  methods: [fixed, otsu]
+  polarities: [binary, binary_inv]
+  default_channel: lab_b
+  default_method: fixed
+  default_polarity: binary
+  minimum_variant_agreement_iou: 0.50
+  minimum_variant_agreement_iou: 0.50
+  fixed_thresholds:
+    lab_a: 0.0
+    lab_b: 8.0
+    hsv_h: 120.0
+    hsv_s: 0.15
+  morphology:
+    open_kernel: 3
+    close_kernel: 9
+    open_iterations: 1
+    close_iterations: 2
+    fill_holes: true
+  ranking:
+    min_area_fraction: 0.03
+    max_area_fraction: 0.90
+    target_area_fraction: 0.32
+    minimum_score: 0.45
+    ambiguity_margin: 0.025
+
+# Phase 3: unsupervised candidate defect regions from color clusters.
+# Generated outputs are exploratory; Dataset C lineage remains unresolved.
+phase3:
+  manifest_path: data/metadata/phase02_manifest.csv
+  fruit_ground_truth_manifest: data/metadata/fruit_gt_manifest.csv
+  phase2_mask_manifest: data/metadata/phase2_segmentation_manifest.csv
+  output_dir: data/processed/phase3
+  result_manifest: data/metadata/phase03_manifest.csv
+  results_path: reports/phase03_results.csv
+  metrics_path: reports/phase03_metrics.csv
+  report_path: reports/phase03_report.md
+  seed: 20261023
+  mask_modes: [heuristic, approved]
+  variants: [original, gray_world]
+  color_spaces: [Lab, HSV]
+  k_values: [2, 3, 4, 5]
+  max_fit_pixels: 4000
+  min_fruit_pixels: 100
+  attempts: 1
+  max_iterations: 30
+  epsilon: 0.001
+  checkpoint_images: 25
+  preview_image_count: 12
+  selection_rule:
+    minimum_cluster_fraction: 0.003
+    maximum_cluster_fraction: 0.35
+    minimum_component_fraction: 0.001
+    minimum_component_pixels: 5
+    minimum_color_distance: 0.12
+    preferred_area_fraction: 0.08
+    minimum_suspicion_score: 0.34
+    minimum_darkness_delta: 0.12
+    color_weight: 0.50
+    darkness_weight: 0.25
+    area_weight: 0.15
+    continuity_weight: 0.10
+
+# Phase 4: color and K-Means feature tables. Phase 0.2 splits remain canonical.
+phase4:
+  manifest_path: data/metadata/phase02_manifest.csv
+  output_dir: data/features
+  cache_dir: data/features/cache
+  fruit_mask_manifest: data/metadata/phase04_fruit_masks.csv
+  fruit_mask_dir: data/processed/phase4_fruit_masks
+  schema_path: data/features/feature_schema.json
+  report_path: reports/phase04_report.md
+  distribution_report_csv: reports/phase04_distribution_comparison.csv
+  label_summary_csv: reports/phase04_label_feature_summary.csv
+  checkpoint_images: 25
+  min_fruit_pixels: 100
+  max_analysis_side: 512
+  tasks:
+    ripeness:
+      dataset: mango_ripeness
+      task: ripeness_classification
+      split_path: data/splits/phase02/mango_ripeness_ripeness_classification.csv
+    defect:
+      dataset: mango_segmentation
+      task: defect_analysis
+      split_path: data/splits/phase02/mango_segmentation_defect_analysis.csv
+  color_proportions:
+    minimum_saturation: 0.15
+    minimum_value: 0.08
+    hue_ranges_degrees:
+      orange: [15.0, 35.0]
+      yellow: [35.0, 70.0]
+      green: [70.0, 165.0]
+
+# Phase 5 model selection uses train-only group-aware CV and a locked validation set.
+phase5:
+  report_dir: reports
+  report_path: reports/phase05_report.md
+  model_dir: models/phase05
+  seed: 42
+  cv_folds: 5
+  n_jobs: 1
+  permutation_repeats: 8
+  knn_neighbors: [3, 5, 7, 11]
+  knn_weights: [uniform, distance]
+  svm_C: [0.1, 1, 10, 100]
+  svm_gamma: [scale]
+  rf_n_estimators: [100, 200]
+  rf_max_depth: [null, 20]
+  rf_min_samples_leaf: [1, 2]
+
+# Phase 5.1 creates a separate group-aware split and model registry; Phase 0.2
+# splits and Phase 5 artifacts remain unchanged for comparison.
+phase051:
+  seed: 20261023
+  cv_folds: 5
+  # Compact, predeclared tuning grid to keep the repeated group-CV audit tractable.
+  model_grid:
+    knn_neighbors: [5, 11]
+    knn_weights: [uniform, distance]
+    svm_C: [1, 10]
+    svm_gamma: [scale]
+    rf_n_estimators: [100, 200]
+    rf_max_depth: [null, 20]
+    rf_min_samples_leaf: [1]
+
+# Public source metadata was checked on 2026-10-23. Labels are inferred only
+# from exact directory names (or an explicit labels_overrides.csv entry).
+datasets:
+  mango_ripeness:
+    title: Alphonso Mango Ripening Stage Classification Dataset
+    url: https://data.mendeley.com/datasets/tyghd6gxw2/1
+    dataset_id: tyghd6gxw2
+    version: 1
+    task: ripeness_classification
+    expected_images: 750
+    expected_images_description: "750 (250 per ripeness class)"
+    download_mode: all_files
+    include_patterns: []
+    exclude_patterns: []
+    ripeness_labels:
+      unripe: [unripe]
+      partially_ripe: [partially ripe, partiallyripe, partially_ripe, partially-ripe]
+      ripe: [ripe]
+  mango_fruit_defect:
+    title: MangoFruitDefect
+    url: https://data.mendeley.com/datasets/jnp9tmyrt6/1
+    dataset_id: jnp9tmyrt6
+    version: 1
+    task: defect_analysis
+    expected_images: null
+    expected_images_description: "around 1,500+ images of Alphonso mangoes with defects; actual archive count must be reported"
+    download_mode: all_files
+    include_patterns: []
+    exclude_patterns: []
+    ripeness_labels: {}
+    defect_labels:
+      healthy: [healthy]
+      defective: [defective, damaged, infected]
+  mango_segmentation:
+    title: Mango classification and segmentation dataset in Uganda
+    url: https://data.mendeley.com/datasets/cy3ccgkx3n/1
+    dataset_id: cy3ccgkx3n
+    version: 1
+    task: defect_segmentation
+    expected_images: null
+    expected_images_description: "Full archive: 1,611 healthy species images, 1,500 segmentation images (described as augmented) plus 1,500 masks, 957 raw damaged images, and 6,419 augmented damaged images"
+    download_mode: selective
+    # Select segmentation images/masks by remote names only. The source page
+    # says the segmentation images are augmented, so do not exclude "augment".
+    # If names do not match, nothing is downloaded; inspect/import manually.
+    include_patterns: ['*segment*', '*mask*']
+    exclude_patterns: []
+    ripeness_labels: {}
+    defect_labels: {}
+    # Exact folder components verified after importing the public archive.
+    # These component-level labels/tasks are from the official dataset description;
+    # subtype labels and mask semantics remain unassigned until separately reviewed.
+    component_rules:
+      - path_component: "Damaged dataset"
+        task: defect_analysis
+        defect_label: defective
+      - path_component: "Damaged_mangoes_cropped"
+        task: defect_analysis
+        defect_label: defective
+        original_or_augmented: original
+      - path_component: "BAD MANGOES AUGMENTED"
+        task: defect_analysis
+        defect_label: defective
+        original_or_augmented: augmented
+      - path_component: "Mango Species Classification Dataset"
+        task: defect_analysis
+        defect_label: healthy
+      - path_component: "segmentation dataset"
+        task: defect_segmentation
+        defect_label: defective
+        original_or_augmented: augmented

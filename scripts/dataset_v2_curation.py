@@ -1,0 +1,572 @@
+"""Build reproducible, non-destructive curated candidates from the Dataset v2 archives.
+
+The script reads the audit ZIPs in reports/dataset_v2_visual_audit/downloads and writes
+only new manifests/reports under data/metadata and reports/dataset_v2_curation*.
+"""
+from __future__ import annotations
+
+import csv
+import hashlib
+import itertools
+import json
+import math
+import re
+import zipfile
+from collections import Counter, defaultdict
+from pathlib import Path
+
+import pandas as pd
+from PIL import Image, ImageDraw, ImageOps
+
+
+ROOT = Path(__file__).resolve().parents[1]
+AUDIT = ROOT / "reports" / "dataset_v2_visual_audit"
+DOWNLOADS = AUDIT / "downloads"
+OUT = ROOT / "reports" / "dataset_v2_curation"
+SHEETS = OUT / "contact_sheets"
+META = ROOT / "data" / "metadata"
+HARU_ZIP = DOWNLOADS / "harumanis_v4_all.zip"
+MFB_OUTER = DOWNLOADS / "mangofruitbd_v2_all.zip"
+MFB_INNER = DOWNLOADS / "MangoFruitBD.zip"
+CLASS_ID = {0: "Alternaria", 1: "Anthracnose", 2: "Healthy", 3: "Scab"}
+CLASS_BINARY = {"Alternaria": "defective", "Anthracnose": "defective", "Scab": "defective", "Healthy": "healthy"}
+
+
+def sha_group_id(prefix: str, value: str) -> str:
+    return f"{prefix}_{value[:16]}"
+
+
+def file_record_id(prefix: str, path: str) -> str:
+    stem = re.sub(r"[^A-Za-z0-9_-]+", "_", Path(path).stem).strip("_")
+    path_tag = hashlib.sha1(path.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}_{stem}_{path_tag}"
+
+
+def dhash(image: Image.Image) -> int:
+    gray = image.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
+    px = list(gray.get_flattened_data())
+    bits = 0
+    for y in range(8):
+        for x in range(8):
+            bits = (bits << 1) | int(px[y * 9 + x] > px[y * 9 + x + 1])
+    return bits
+
+
+def hamming(a: int, b: int) -> int:
+    return (a ^ b).bit_count()
+
+
+def components(nodes: list[str], edges: list[tuple[str, str]]) -> list[list[str]]:
+    adj: dict[str, set[str]] = defaultdict(set)
+    for a, b in edges:
+        adj[a].add(b)
+        adj[b].add(a)
+    seen: set[str] = set()
+    result = []
+    for node in nodes:
+        if node in seen:
+            continue
+        stack, group = [node], []
+        seen.add(node)
+        while stack:
+            cur = stack.pop()
+            group.append(cur)
+            for other in adj[cur] - seen:
+                seen.add(other)
+                stack.append(other)
+        result.append(sorted(group))
+    return result
+
+
+def yolo_boxes(zf: zipfile.ZipFile, label_path: str) -> list[dict]:
+    try:
+        raw = zf.read(label_path).decode("utf-8-sig")
+    except KeyError:
+        return []
+    boxes = []
+    for line_no, line in enumerate(raw.splitlines(), 1):
+        fields = line.strip().split()
+        if not fields:
+            continue
+        try:
+            cls = int(fields[0])
+            cx, cy, w, h = map(float, fields[1:5])
+            valid = cls in CLASS_ID and all(math.isfinite(v) for v in (cx, cy, w, h)) and 0 <= cx <= 1 and 0 <= cy <= 1 and 0 < w <= 1 and 0 < h <= 1 and cx - w / 2 >= -1e-6 and cy - h / 2 >= -1e-6 and cx + w / 2 <= 1 + 1e-6 and cy + h / 2 <= 1 + 1e-6
+            boxes.append({"class_id": cls, "label": CLASS_ID.get(cls, f"unknown_{cls}"), "cx": cx, "cy": cy, "w": w, "h": h, "valid": valid, "line": line_no})
+        except (ValueError, IndexError):
+            boxes.append({"class_id": -1, "label": "invalid", "valid": False, "line": line_no})
+    return boxes
+
+
+def bbox_xyxy(b: dict) -> tuple[float, float, float, float]:
+    return (b["cx"] - b["w"] / 2, b["cy"] - b["h"] / 2, b["cx"] + b["w"] / 2, b["cy"] + b["h"] / 2)
+
+
+def box_iou(a: dict, b: dict) -> float:
+    ax1, ay1, ax2, ay2 = bbox_xyxy(a)
+    bx1, by1, bx2, by2 = bbox_xyxy(b)
+    inter = max(0, min(ax2, bx2) - max(ax1, bx1)) * max(0, min(ay2, by2) - max(ay1, by1))
+    union = a["w"] * a["h"] + b["w"] * b["h"] - inter
+    return inter / union if union else 0.0
+
+
+def greedy_box_match(a: list[dict], b: list[dict]) -> list[tuple[dict, dict, float]]:
+    candidates = sorted(((box_iou(x, y), i, j) for i, x in enumerate(a) for j, y in enumerate(b)), reverse=True)
+    used_a, used_b, matches = set(), set(), []
+    for score, i, j in candidates:
+        if i not in used_a and j not in used_b:
+            used_a.add(i); used_b.add(j); matches.append((a[i], b[j], score))
+    return matches
+
+
+def text_tile(im: Image.Image, title: str, subtitle: str = "", size=(260, 260)) -> Image.Image:
+    tile = Image.new("RGB", (size[0], size[1] + 55), "white")
+    im = im.convert("RGB")
+    im.thumbnail(size, Image.Resampling.LANCZOS)
+    tile.paste(im, ((size[0] - im.width) // 2, (size[1] - im.height) // 2))
+    d = ImageDraw.Draw(tile)
+    d.text((4, size[1] + 2), title[:50], fill="black")
+    d.text((4, size[1] + 22), subtitle[:56], fill="black")
+    return tile
+
+
+def save_pages(tiles: list[Image.Image], path: Path, per_page: int, columns: int = 4) -> int:
+    path.mkdir(parents=True, exist_ok=True)
+    # Remove only stale pages generated by this report so reruns cannot leave old sheets behind.
+    for old_page in path.glob("page_*.jpg"):
+        old_page.unlink()
+    pages = 0
+    for start in range(0, len(tiles), per_page):
+        page = tiles[start:start + per_page]
+        tile_w, tile_h = page[0].size
+        rows = math.ceil(len(page) / columns)
+        sheet = Image.new("RGB", (columns * tile_w, rows * tile_h), "#dddddd")
+        for i, tile in enumerate(page):
+            sheet.paste(tile, ((i % columns) * tile_w, (i // columns) * tile_h))
+        pages += 1
+        sheet.save(path / f"page_{pages:02d}.jpg", quality=88)
+    return pages
+
+
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True); META.mkdir(parents=True, exist_ok=True)
+    haru = pd.read_csv(AUDIT / "harumanis_image_inventory.csv").fillna("")
+    mfb = pd.read_csv(AUDIT / "mangofruitbd_image_inventory.csv").fillna("")
+    haru_split_dups = pd.read_csv(AUDIT / "harumanis_cross_split_exact_duplicates.csv").fillna("")
+    mfb_exact_dups = pd.read_csv(AUDIT / "mangofruitbd_exact_duplicate_groups.csv").fillna("")
+    haru_cross_split_count = len(haru_split_dups)
+    mfb_cross_split_count = int(mfb_exact_dups["cross_split"].astype(str).str.lower().eq("true").sum())
+
+    # --- Harumanis raw original inventory: exact hashes are definitive copies. ---
+    haru_rows = haru.to_dict("records")
+    h_by_hash: dict[str, list[dict]] = defaultdict(list)
+    for row in haru_rows:
+        h_by_hash[str(row["sha256"])].append(row)
+    exact_conflict_hashes = {h for h, group in h_by_hash.items() if len({r["class"] for r in group}) > 1}
+    h_ids = [str(r["image_path_in_zip"]) for r in haru_rows]
+    h_hash_for_path = {str(r["image_path_in_zip"]): str(r["sha256"]) for r in haru_rows}
+    h_class_for_path = {str(r["image_path_in_zip"]): str(r["class"]) for r in haru_rows}
+    h_dhash_for_path = {str(r["image_path_in_zip"]): int(str(r["dhash"]), 16) for r in haru_rows}
+    h_edges = []
+    for a, b in itertools.combinations(haru_rows, 2):
+        if a["sha256"] == b["sha256"]:
+            continue
+        if hamming(int(str(a["dhash"]), 16), int(str(b["dhash"]), 16)) <= 5:
+            h_edges.append((str(a["image_path_in_zip"]), str(b["image_path_in_zip"])))
+    h_components = components(h_ids, h_edges)
+    near_group_for_path: dict[str, str] = {}
+    h_near_conflict_paths: set[str] = set()
+    h_near_conflict_groups = []
+    h_near_group_no = 0
+    for group in h_components:
+        if len(group) < 2:
+            continue
+        h_near_group_no += 1
+        gid = f"haru_near_candidate_{h_near_group_no:02d}"
+        for path in group:
+            near_group_for_path[path] = gid
+        labels = {h_class_for_path[p] for p in group}
+        if len(labels) > 1:
+            h_near_conflict_paths.update(group)
+            h_near_conflict_groups.append((gid, group, labels))
+
+    h_candidates, h_reviews = [], []
+    h_count_by_label = Counter()
+    for sha, group in sorted(h_by_hash.items()):
+        labels = sorted({str(r["class"]) for r in group})
+        canonical = sorted(group, key=lambda r: str(r["image_path_in_zip"]))[0]
+        paths = [str(r["image_path_in_zip"]) for r in group]
+        conflicting = sha in exact_conflict_hashes
+        near_cross = any(p in h_near_conflict_paths for p in paths)
+        exact_group = sha_group_id("haru_exact", sha) if len(group) > 1 else ""
+        near_group = next((near_group_for_path[p] for p in paths if p in near_group_for_path), "")
+        common = {"source": "Harumanis_v4", "duplicate_group": exact_group, "source_group": near_group or (exact_group or sha_group_id("haru_source", sha)), "original_label": "|".join(labels), "curated_label": labels[0] if len(labels) == 1 else "", "label_conflict_status": "exact_cross_label" if conflicting else ("near_cross_label_candidate_unverified" if near_cross else "none_observed"), "crop_bbox": "", "mask_path": "", "task": "ripeness_classification"}
+        if conflicting or near_cross:
+            reason = "Exact pixel-identical images carry conflicting source maturity labels; no label chosen." if conflicting else "Near-duplicate candidate component spans different source maturity labels; physical identity is unverified, so quarantine pending review."
+            for r in group:
+                h_reviews.append({"image_id": file_record_id("haru", str(r["image_path_in_zip"])), "original_path": f"{HARU_ZIP.name}::{r['image_path_in_zip']}", **common, "review_status": "needs_human_review", "eligibility_reason": reason})
+            continue
+        assert len(labels) == 1
+        h_count_by_label[labels[0]] += 1
+        h_candidates.append({"image_id": file_record_id("haru", str(canonical["image_path_in_zip"])), "original_path": f"{HARU_ZIP.name}::{canonical['image_path_in_zip']}", **common, "review_status": "source_label_unreviewed; candidate_only", "eligibility_reason": "One row per unique decoded-pixel content; source maturity label is retained; rotten remains a separate class. Exact same-label aliases deduplicated. No official split created."})
+        for r in group:
+            if r is canonical:
+                continue
+            h_reviews.append({"image_id": file_record_id("haru", str(r["image_path_in_zip"])), "original_path": f"{HARU_ZIP.name}::{r['image_path_in_zip']}", **common, "review_status": "deduplicated_exact_alias", "eligibility_reason": f"Exact pixel duplicate of curated candidate {file_record_id('haru', str(canonical['image_path_in_zip']))}; retained here as provenance alias, not an independent sample."})
+
+    # --- MangoFruitBD: inspect exact image groups and original YOLO boxes. ---
+    if not MFB_INNER.exists():
+        raise FileNotFoundError(f"Expected nested source archive: {MFB_INNER}")
+    mfb_rows = mfb.to_dict("records")
+    m_by_hash: dict[str, list[dict]] = defaultdict(list)
+    for row in mfb_rows:
+        m_by_hash[str(row["sha256"])].append(row)
+    lineage = pd.read_csv(AUDIT / "mangofruitbd_alternaria_lineage.csv").fillna("")
+    aug_paths = set(lineage.loc[lineage["group_evidence"].astype(str).str.contains("aug", case=False), "image_path_in_zip"].astype(str))
+    mfb_hashes: dict[str, int] = {}
+    boxes_by_path: dict[str, list[dict]] = {}
+    mfb_dhash_by_hash: dict[str, int] = {}
+    mfb_exif_orientation_counts: Counter[int] = Counter()
+    # Open inner ZIP; stream labels and image thumbnails for dHash. No extraction.
+    with zipfile.ZipFile(MFB_INNER) as mz:
+        for row in mfb_rows:
+            p = str(row["image_path_in_zip"])
+            label_path = str(row["image_label_path"])
+            boxes_by_path[p] = yolo_boxes(mz, label_path)
+        for sha, group in m_by_hash.items():
+            row = group[0]
+            with mz.open(str(row["image_path_in_zip"])) as f:
+                with Image.open(f) as image:
+                    orientation = int(image.getexif().get(274, 1))
+                    mfb_exif_orientation_counts[orientation] += 1
+                    mfb_dhash_by_hash[sha] = dhash(ImageOps.exif_transpose(image))
+
+        # Exact alias box consistency: same image frame, match boxes geometrically.
+        alias_checks = []
+        group_box_records: dict[str, list[dict]] = {}
+        consensus_box_labels: dict[str, list[set[str]]] = {}
+        for sha, group in m_by_hash.items():
+            paths = [str(r["image_path_in_zip"]) for r in sorted(group, key=lambda x: str(x["image_path_in_zip"]))]
+            base_boxes = boxes_by_path[paths[0]]
+            per_box_labels = [{b["label"]} for b in base_boxes]
+            all_labels = set()
+            binary_set = set()
+            for p in paths:
+                for b in boxes_by_path[p]:
+                    all_labels.add(b["label"])
+                    if b["label"] in CLASS_BINARY:
+                        binary_set.add(CLASS_BINARY[b["label"]])
+            group_box_records[sha] = base_boxes
+            for p in paths[1:]:
+                other = boxes_by_path[p]
+                matches = greedy_box_match(base_boxes, other)
+                scores = [score for _, _, score in matches]
+                matched_binary_ok = all(CLASS_BINARY.get(a["label"]) == CLASS_BINARY.get(b["label"]) for a, b, _ in matches)
+                # Operational crop-consistency screen, not pixel-level GT validation.
+                consistent = len(base_boxes) == len(other) and len(matches) == len(base_boxes) and all(s >= 0.90 for s in scores) and matched_binary_ok
+                for base_box, alias_box, _ in matches:
+                    try:
+                        per_box_labels[base_boxes.index(base_box)].add(alias_box["label"])
+                    except ValueError:
+                        pass
+                alias_checks.append({"sha": sha, "base_path": paths[0], "alias_path": p, "base_boxes": len(base_boxes), "alias_boxes": len(other), "matched_boxes": len(matches), "min_box_iou": min(scores) if scores else None, "mean_box_iou": sum(scores) / len(scores) if scores else None, "binary_labels_consistent": matched_binary_ok, "geometry_consistent": consistent, "strict_iou_ge_0_99": len(base_boxes) == len(other) and len(matches) == len(base_boxes) and all(s >= 0.99 for s in scores), "base_labels": "|".join(sorted({b['label'] for b in base_boxes})), "alias_labels": "|".join(sorted({b['label'] for b in other}))})
+            consensus_box_labels[sha] = per_box_labels
+
+        # Near-duplicate image candidates from actual image dHash. Candidate only: never auto-merge.
+        unique_sha = list(m_by_hash)
+        mfb_near_edges = []
+        for a, b in itertools.combinations(unique_sha, 2):
+            distance = hamming(mfb_dhash_by_hash[a], mfb_dhash_by_hash[b])
+            if distance <= 4:
+                mfb_near_edges.append((a, b, distance))
+        mfb_near_components = components(unique_sha, [(a, b) for a, b, _ in mfb_near_edges])
+        near_group_for_sha: dict[str, str] = {}
+        near_group_counter = 0
+        for near_component in mfb_near_components:
+            if len(near_component) > 1:
+                near_group_counter += 1
+                near_gid = f"mfb_near_candidate_{near_group_counter:03d}"
+                for sha in near_component:
+                    near_group_for_sha[sha] = near_gid
+
+        # Generate representative per-fruit crop review sheet, with actual source boxes.
+        crop_tiles_by_class: dict[str, list[Image.Image]] = defaultdict(list)
+        rng_order = sorted((sha, group) for sha, group in m_by_hash.items())
+        by_class_boxes: dict[str, list[tuple[dict, dict, dict]]] = defaultdict(list)
+        for sha, group in rng_order:
+            representative = sorted(group, key=lambda r: str(r["image_path_in_zip"]))[0]
+            p = str(representative["image_path_in_zip"])
+            for b in group_box_records[sha]:
+                if b.get("valid") and b["label"] in CLASS_ID.values():
+                    by_class_boxes[b["label"]].append((representative, b, {"sha": sha, "paths": [str(x["image_path_in_zip"]) for x in group]}))
+        for cls, rows in by_class_boxes.items():
+            # Deterministic sample spread across archive order; no label-based hand selection.
+            if len(rows) > 20:
+                idxs = [round(i * (len(rows) - 1) / 19) for i in range(20)]
+                rows = [rows[i] for i in idxs]
+            for imrow, box, details in rows:
+                p = str(imrow["image_path_in_zip"])
+                with mz.open(p) as f:
+                    image = ImageOps.exif_transpose(Image.open(f)).convert("RGB")
+                iw, ih = image.size
+                x1, y1, x2, y2 = bbox_xyxy(box)
+                crop = image.crop((round(x1 * iw), round(y1 * ih), round(x2 * iw), round(y2 * ih)))
+                title = f"{cls} | area={box['w']*box['h']:.3f}"
+                subtitle = f"{Path(p).name} | {iw}x{ih}"
+                crop_tiles_by_class[cls].append(text_tile(crop, title, subtitle, size=(300, 250)))
+
+    # Determine source-level near groups for Harumanis candidates, already computed above.
+    # Mango exact aliases are represented once; suspicious near image pairs remain flagged for review.
+    mfb_near_hashes = {sha for a, b, _ in mfb_near_edges for sha in (a, b)}
+    near_cross_binary = []
+    for a, b, d in mfb_near_edges:
+        la = {CLASS_BINARY.get(x["label"]) for p in [str(r["image_path_in_zip"]) for r in m_by_hash[a]] for x in boxes_by_path[p] if x["label"] in CLASS_BINARY}
+        lb = {CLASS_BINARY.get(x["label"]) for p in [str(r["image_path_in_zip"]) for r in m_by_hash[b]] for x in boxes_by_path[p] if x["label"] in CLASS_BINARY}
+        if la and lb and la.isdisjoint(lb):
+            near_cross_binary.append((a, b, d))
+    mfb_review_sha = {a for a, b, _ in near_cross_binary} | {b for a, b, _ in near_cross_binary}
+    inconsistent_alias_sha = {x["sha"] for x in alias_checks if not x["geometry_consistent"]}
+    m_candidates, m_reviews = [], []
+    m_box_counts = Counter()
+    all_source_labels_by_hash = {}
+    for sha, group in sorted(m_by_hash.items()):
+        paths = [str(r["image_path_in_zip"]) for r in sorted(group, key=lambda x: str(x["image_path_in_zip"]))]
+        canonical_path = paths[0]
+        all_boxes = group_box_records[sha]
+        per_box_labels = consensus_box_labels[sha]
+        labels = sorted({label for label_set in per_box_labels for label in label_set if label in CLASS_BINARY})
+        all_source_labels_by_hash[sha] = labels
+        duplicate_group = sha_group_id("mfb_exact", sha) if len(group) > 1 else ""
+        alias_fine_conflict = any(len({x for x in label_set if x in CLASS_BINARY}) > 1 for label_set in per_box_labels)
+        binary_conflict = any(len({CLASS_BINARY[x] for x in label_set if x in CLASS_BINARY}) > 1 for label_set in per_box_labels)
+        is_aug = any(p in aug_paths for p in paths)
+        is_background = len(all_boxes) == 0
+        cross_binary_near = sha in mfb_review_sha
+        alias_geometry_issue = sha in inconsistent_alias_sha
+        source_group = near_group_for_sha.get(sha, duplicate_group or sha_group_id("mfb_source", sha))
+        if is_background:
+            m_reviews.append({"image_id": "mfb_" + sha[:16] + "_background", "source": "MangoFruitBD_v2", "original_path": f"{MFB_INNER.name}::{canonical_path}", "original_label": "Background", "curated_label": "", "source_group": source_group, "duplicate_group": duplicate_group, "label_conflict_status": "none_observed", "crop_bbox": "", "review_status": "not_a_fruit_crop", "eligibility_reason": "Source background image has no fruit bounding box; not an object-level sample."})
+            continue
+        for box_i, box in enumerate(all_boxes, 1):
+            object_labels = sorted(x for x in per_box_labels[box_i - 1] if x in CLASS_BINARY)
+            object_binary = {CLASS_BINARY[x] for x in object_labels}
+            object_binary_conflict = len(object_binary) > 1
+            object_fine_conflict = len(set(object_labels)) > 1
+            if not box.get("valid") or box["label"] not in CLASS_BINARY:
+                m_reviews.append({"image_id": f"mfb_{sha[:16]}_box{box_i:02d}", "source": "MangoFruitBD_v2", "original_path": f"{MFB_INNER.name}::{canonical_path}", "original_label": box.get("label", "invalid"), "curated_label": "", "source_group": source_group, "duplicate_group": duplicate_group, "label_conflict_status": "annotation_invalid", "crop_bbox": json.dumps(box, ensure_ascii=False), "review_status": "needs_human_review", "eligibility_reason": "YOLO row failed finite/range/positive-area validation."})
+                continue
+            x1, y1, x2, y2 = bbox_xyxy(box)
+            bbox_str = json.dumps({"format": "normalized_xyxy_0_1", "coordinates": "EXIF-corrected displayed image", "x1": round(x1, 8), "y1": round(y1, 8), "x2": round(x2, 8), "y2": round(y2, 8)}, separators=(",", ":"))
+            row = {"image_id": f"mfb_{sha[:16]}_box{box_i:02d}", "source": "MangoFruitBD_v2", "original_path": f"{MFB_INNER.name}::{canonical_path}", "original_label": "|".join(object_labels) if object_fine_conflict else box["label"], "curated_label": CLASS_BINARY[box["label"]] if not object_binary_conflict else "", "source_group": source_group, "duplicate_group": duplicate_group, "label_conflict_status": "binary_conflict" if object_binary_conflict else ("fine_grained_conflict_binary_consistent" if object_fine_conflict else "none_observed"), "crop_bbox": bbox_str, "review_status": "candidate_only; source annotation not independently re-annotated", "eligibility_reason": "Validated whole-fruit YOLO crop. Binary mapping Healthy→healthy and Alternaria/Anthracnose/Scab→defective is valid at object level; original class retained. No split created."}
+            reasons = []
+            if object_binary_conflict: reasons.append("exact duplicate aliases disagree on healthy/defective for this box")
+            if is_aug: reasons.append("probable Alternaria augmentation has unresolved parent lineage")
+            if cross_binary_near: reasons.append("near-duplicate dHash candidate crosses binary labels; source identity unverified")
+            if alias_geometry_issue: reasons.append("duplicate aliases have unmatched or non-identical boxes")
+            if sha in near_group_for_sha: reasons.append("unverified dHash near-source group; retain as one group in any future split")
+            if reasons:
+                row["curated_label"] = "" if object_binary_conflict else row["curated_label"]
+                row["review_status"] = "needs_human_review"
+                row["eligibility_reason"] = "; ".join(reasons) + "."
+                m_reviews.append(row)
+            else:
+                m_candidates.append(row)
+                m_box_counts[row["curated_label"]] += 1
+        # Add exact duplicate alias provenance and any same-binary fine conflict even if candidate rows retained.
+        if len(paths) > 1:
+            for p in paths[1:]:
+                m_reviews.append({"image_id": file_record_id("mfb_alias", p), "source": "MangoFruitBD_v2", "original_path": f"{MFB_INNER.name}::{p}", "original_label": "|".join(labels), "curated_label": "", "source_group": source_group, "duplicate_group": duplicate_group, "label_conflict_status": "fine_grained_conflict_binary_consistent" if alias_fine_conflict and not binary_conflict else ("binary_conflict" if binary_conflict else "exact_duplicate_alias"), "crop_bbox": "", "review_status": "deduplicated_alias; inspect annotation conflict if applicable", "eligibility_reason": "Exact-pixel duplicate alias; not counted as an independent image/crop."})
+
+    # Near candidate rows are stored separately from labels; no automatic source merge.
+    m_near_rows = []
+    for a, b, distance in sorted(mfb_near_edges, key=lambda x: x[2]):
+        ra = sorted(m_by_hash[a], key=lambda r: str(r["image_path_in_zip"]))[0]
+        rb = sorted(m_by_hash[b], key=lambda r: str(r["image_path_in_zip"]))[0]
+        m_near_rows.append({"source": "MangoFruitBD_v2", "image_a": f"{MFB_INNER.name}::{ra['image_path_in_zip']}", "image_b": f"{MFB_INNER.name}::{rb['image_path_in_zip']}", "sha256_a": a, "sha256_b": b, "dhash_distance": distance, "near_group": near_group_for_sha.get(a, ""), "labels_a": "|".join(all_source_labels_by_hash.get(a, [])), "labels_b": "|".join(all_source_labels_by_hash.get(b, [])), "binary_cross_label_candidate": a in mfb_review_sha and b in mfb_review_sha, "status": "unverified_near_duplicate_candidate; not merged"})
+    for a, b in h_edges:
+        distance = hamming(h_dhash_for_path[a], h_dhash_for_path[b])
+        m_near_rows.append({"source": "Harumanis_v4", "image_a": f"{HARU_ZIP.name}::{a}", "image_b": f"{HARU_ZIP.name}::{b}", "sha256_a": h_hash_for_path[a], "sha256_b": h_hash_for_path[b], "dhash_distance": distance, "near_group": near_group_for_path.get(a, ""), "labels_a": h_class_for_path[a], "labels_b": h_class_for_path[b], "label_conflict_candidate": h_class_for_path[a] != h_class_for_path[b], "status": "cross-label candidate held with exact-conflict group" if h_class_for_path[a] != h_class_for_path[b] else "unverified same-label near-source group; not merged"})
+
+    # Persist tabular outputs, preserving raw archive references and source annotations.
+    fields = ["image_id", "source", "original_path", "original_label", "curated_label", "source_group", "duplicate_group", "label_conflict_status", "crop_bbox", "review_status", "eligibility_reason", "task"]
+    candidate_path = META / "dataset_v2_curated_candidate_manifest.csv"
+    review_path = META / "dataset_v2_review_manifest.csv"
+    pd.DataFrame(h_candidates + m_candidates).reindex(columns=fields).to_csv(candidate_path, index=False, quoting=csv.QUOTE_MINIMAL)
+    pd.DataFrame(h_reviews + m_reviews).reindex(columns=fields).to_csv(review_path, index=False, quoting=csv.QUOTE_MINIMAL)
+    pd.DataFrame(alias_checks).to_csv(META / "dataset_v2_duplicate_bbox_consistency.csv", index=False)
+    pd.DataFrame(m_near_rows).to_csv(META / "dataset_v2_near_duplicate_candidates.csv", index=False)
+
+    # Source-group / duplicate group summary for auditing the curation decisions.
+    group_rows = []
+    for sha, group in sorted(h_by_hash.items()):
+        group_rows.append({"source": "Harumanis_v4", "content_sha256": sha, "member_count": len(group), "source_labels": "|".join(sorted({str(x['class']) for x in group})), "source_group": sha_group_id("haru_exact", sha) if len(group) > 1 else sha_group_id("haru_source", sha), "group_status": "exact_cross_label_conflict" if sha in exact_conflict_hashes else "exact_same_label_or_singleton"})
+    for sha, group in sorted(m_by_hash.items()):
+        labels = sorted({b["label"] for p in [str(r["image_path_in_zip"]) for r in group] for b in boxes_by_path[p]})
+        per_box_sets = consensus_box_labels[sha]
+        fine_conflict = any(len({x for x in label_set if x in CLASS_BINARY}) > 1 for label_set in per_box_sets)
+        binary_conflict = any(len({CLASS_BINARY[x] for x in label_set if x in CLASS_BINARY}) > 1 for label_set in per_box_sets)
+        group_rows.append({"source": "MangoFruitBD_v2", "content_sha256": sha, "member_count": len(group), "source_labels": "|".join(labels), "source_group": near_group_for_sha.get(sha, sha_group_id("mfb_exact", sha) if len(group) > 1 else sha_group_id("mfb_source", sha)), "duplicate_group": sha_group_id("mfb_exact", sha) if len(group) > 1 else "", "group_status": "exact_binary_conflict" if binary_conflict else ("exact_fine_label_conflict_binary_consistent" if fine_conflict else "exact_same_label_or_singleton")})
+    pd.DataFrame(group_rows).to_csv(META / "dataset_v2_source_groups.csv", index=False)
+
+    # Conflict contact sheets from the archives. Show one exact-image thumbnail with all conflicting labels/paths.
+    h_tiles = []
+    with zipfile.ZipFile(HARU_ZIP) as hz:
+        for sha in sorted(exact_conflict_hashes):
+            group = sorted(h_by_hash[sha], key=lambda r: str(r["image_path_in_zip"]))
+            r = group[0]
+            with hz.open(str(r["image_path_in_zip"])) as f:
+                im = Image.open(f).convert("RGB")
+            lbl = " vs ".join(sorted({str(x["class"]) for x in group}))
+            names = ", ".join(Path(str(x["image_path_in_zip"])).name for x in group)
+            h_tiles.append(text_tile(im, f"EXACT: {lbl}", names, size=(230, 210)))
+        # Cross-label near candidate component(s), distinct images, not exact duplicates.
+        near_imgs = [p for _, group, _ in h_near_conflict_groups for p in group]
+        for p in near_imgs:
+            with hz.open(p) as f:
+                im = Image.open(f).convert("RGB")
+            h_tiles.append(text_tile(im, f"NEAR CANDIDATE: {h_class_for_path[p]}", Path(p).name, size=(230, 210)))
+    save_pages(h_tiles, SHEETS / "harumanis_conflicts", per_page=20, columns=4)
+
+    # Exact MFB label conflict sheets: identical image with label list / aliases.
+    m_tiles = []
+    m_near_tiles = []
+    with zipfile.ZipFile(MFB_INNER) as mz:
+        for sha, group in sorted(m_by_hash.items()):
+            conflicts = [sorted(x for x in label_set if x in CLASS_BINARY) for label_set in consensus_box_labels[sha] if len({x for x in label_set if x in CLASS_BINARY}) > 1]
+            if not conflicts:
+                continue
+            labels = sorted({x for conflict in conflicts for x in conflict})
+            r = sorted(group, key=lambda x: str(x["image_path_in_zip"]))[0]
+            with mz.open(str(r["image_path_in_zip"])) as f:
+                im = Image.open(f).convert("RGB")
+            aliases = " | ".join(Path(str(x["image_path_in_zip"])).name for x in group)
+            m_tiles.append(text_tile(im, "EXACT: " + "/".join(labels), aliases, size=(230, 210)))
+        for a, b, distance in sorted(mfb_near_edges, key=lambda x: x[2]):
+            for sha, side in ((a, "A"), (b, "B")):
+                rr = sorted(m_by_hash[sha], key=lambda x: str(x["image_path_in_zip"]))[0]
+                with mz.open(str(rr["image_path_in_zip"])) as f:
+                    im = Image.open(f).convert("RGB")
+                label_text = "|".join(all_source_labels_by_hash.get(sha, []))
+                m_near_tiles.append(text_tile(im, f"NEAR dH={distance} {side}:{label_text}", Path(str(rr["image_path_in_zip"])).name, size=(230, 210)))
+    save_pages(m_tiles, SHEETS / "mangofruitbd_exact_label_conflicts", per_page=20, columns=4)
+    save_pages(m_near_tiles, SHEETS / "mangofruitbd_near_candidates", per_page=20, columns=4)
+    for cls, tiles in crop_tiles_by_class.items():
+        save_pages(tiles, SHEETS / f"mangofruitbd_box_crops_{cls.lower()}", per_page=20, columns=4)
+
+    # Summary facts and report.
+    haru_label_counts = Counter(x["curated_label"] for x in h_candidates)
+    haru_candidate_groups = len({x["source_group"] for x in h_candidates})
+    unique_mfb_source_images = len(m_by_hash)
+    unique_box_bearing = sum(1 for sha in m_by_hash if group_box_records[sha])
+    mfb_review_status_counts = Counter(x["review_status"] for x in m_reviews)
+    box_areas = [b["w"] * b["h"] for group in group_box_records.values() for b in group if b.get("valid")]
+    box_aspects = [b["w"] / b["h"] for group in group_box_records.values() for b in group if b.get("valid")]
+    alias_iou_values = [x["mean_box_iou"] for x in alias_checks if x["mean_box_iou"] is not None]
+    mfb_binary_conflict_groups = sum(1 for sha in m_by_hash if any(len({CLASS_BINARY[x] for x in label_set if x in CLASS_BINARY}) > 1 for label_set in consensus_box_labels[sha]))
+    mfb_fine_conflict_groups = sum(1 for sha in m_by_hash if any(len({x for x in label_set if x in CLASS_BINARY}) > 1 for label_set in consensus_box_labels[sha]))
+    mfb_aug_unique = sum(1 for sha, g in m_by_hash.items() if any(str(r["image_path_in_zip"]) in aug_paths for r in g))
+    mfb_aug_box_count = sum(len(group_box_records[sha]) for sha, g in m_by_hash.items() if any(str(r["image_path_in_zip"]) in aug_paths for r in g))
+    h_near_pairs = len(h_edges)
+    h_near_cross_pairs = sum(1 for a, b in h_edges if h_class_for_path[a] != h_class_for_path[b])
+    mfb_candidate_group_count = len({x["source_group"] for x in m_candidates})
+    mfb_candidate_crop_count = len(m_candidates)
+    mfb_excluded_crossbinary_groups = len(mfb_review_sha)
+    mfb_candidate_rows_by_label = Counter(x["curated_label"] for x in m_candidates)
+    h_duplicate_conflict_count = len(exact_conflict_hashes)
+    h_excluded_near_conflict_unique = len({h_hash_for_path[p] for p in h_near_conflict_paths if h_hash_for_path[p] not in exact_conflict_hashes})
+    box_invalid_count = sum(1 for group in group_box_records.values() for b in group if not b.get("valid"))
+    sorted_areas = sorted(box_areas)
+    area_median = sorted_areas[len(sorted_areas) // 2] if sorted_areas else float("nan")
+    orientation_text = ", ".join(f"EXIF {k}: {v}" for k, v in sorted(mfb_exif_orientation_counts.items())) or "none observed"
+    source_report = f"""# Dataset v2 — curation candidate report
+
+Generated from the retained source archives on 2026-10-24. This is a **candidate curation**, not an approved replacement dataset. No archive contents, raw data, existing split, feature table, or model were modified. No official train/validation/test split was created.
+
+## Summary
+
+| Source | Source records | Exact unique images | Curated candidate rows | Candidate source groups | Review / excluded records |
+|---|---:|---:|---:|---:|---:|
+| Harumanis v4 | {len(haru_rows)} images | {len(h_by_hash)} | {len(h_candidates)} image rows | {haru_candidate_groups} conservative groups | {len(h_reviews)} |
+| MangoFruitBD v2 | {len(mfb_rows)} images | {unique_mfb_source_images} | {mfb_candidate_crop_count} fruit-box crop rows | {mfb_candidate_group_count} image groups | {len(m_reviews)} |
+
+## Harumanis v4
+
+Source inventory: 272/272 original files decode; source labels are retained as reported. Exact pixel hashing found **{len(h_by_hash)} distinct contents**, with **{h_duplicate_conflict_count} cross-label exact-content groups** excluded. The {sum(len(g) for g in h_by_hash.values() if len({r['class'] for r in g})>1)} paths in these groups are not assigned a corrected label. {sum(len(g)-1 for g in h_by_hash.values() if len(g)>1)} extra exact-copy paths are also not counted as independent images.
+
+Image dHash (64-bit) identified **{h_near_pairs} non-exact pairs at Hamming distance ≤5**, of which {h_near_cross_pairs} cross source labels. This is a candidate screen, not proof of same fruit. A cross-label connected component of {len(h_near_conflict_paths)} distinct images is held for review; its members overlap exact-conflict groups and are not double-counted in the excluded unique-content total. The remaining near candidates stay in the candidate manifest but share a conservative source_group so a future split can keep them together. Candidate labels remain the source's labels; `rotten` is kept as its own class.
+
+Candidate image counts by original class: {', '.join(f'`{k}` {v}' for k,v in sorted(haru_label_counts.items()))}. The candidate contains {len(h_candidates)} unique image contents in {haru_candidate_groups} conservative source groups. These groups merge exact copies, and place unverified near-candidate connected components together; no physical-fruit identity is claimed. Rotten remains small and the source has four classes, so it is not a drop-in replacement for Dataset A's three balanced classes.
+
+## MangoFruitBD v2
+
+All 1,310 image/label pairs were audited from the source archive; the dataset has 2,127 original YOLO rows. The source's four class names are preserved, with the separate object-level binary mapping `Healthy → healthy`; `Alternaria`, `Anthracnose`, `Scab → defective`. Empty Background images do not become healthy object crops. Multi-fruit frames generate one crop row per validated box; no single image-level class is inferred. EXIF orientations among the 1,205 distinct image contents were {orientation_text}; boxes were checked in the EXIF-corrected displayed-image coordinate frame.
+
+There are {mfb_fine_conflict_groups} exact-content groups with fine-grained disease-label disagreement, and {mfb_binary_conflict_groups} groups that disagree on the binary healthy/defective mapping. The former are retained as `defective` only when the aligned source boxes remain binary-consistent, and the original label set is preserved; they remain unsuitable for subtype claims. Alias box geometry was checked against the canonical exact-image copy: {sum(1 for x in alias_checks if x['geometry_consistent'])}/{len(alias_checks)} comparisons have the same box count, one-to-one matched boxes with IoU ≥0.90, and binary-consistent labels. This is a practical crop-consistency screen, not pixel-level annotation validation. {len(inconsistent_alias_sha)} image groups have unresolved box-alias inconsistency and their crops are held for review. Mean/median box match IoU among comparisons with matches: {sum(alias_iou_values)/len(alias_iou_values):.4f}/{sorted(alias_iou_values)[len(alias_iou_values)//2]:.4f} (n={len(alias_iou_values)} comparisons).
+
+The source discloses 83 augmented Alternaria images but does not map each derivative to a parent. Those {mfb_aug_unique} image contents / {mfb_aug_box_count} boxes are excluded from the independent candidate and retained for review. A full-image dHash screen on EXIF-corrected displayed images found {len(mfb_near_edges)} additional non-exact near-candidate pairs at distance ≤4; these are **not merged**. All {len(mfb_near_edges)} pairs are same-label candidates and none crosses the binary labels, but their crop rows are held out of the candidate pending source-identity review. Their shared source_group IDs are retained for future split containment; physical/source relationship remains unverified. The dHash shortlist and contact sheet are in `data/metadata/dataset_v2_near_duplicate_candidates.csv` and `reports/dataset_v2_curation/contact_sheets/mangofruitbd_near_candidates/`.
+
+After excluding background scenes, invalid boxes, unresolved near-source candidates, unresolved alias geometry and probable augmented-parent cases, the crop candidate has **{mfb_candidate_crop_count} box-level rows** across **{mfb_candidate_group_count} conservative source groups**. Candidate labels: {', '.join(f'`{k}` {v}' for k,v in sorted(mfb_candidate_rows_by_label.items()))}. A source_group may contain several fruit crops from one frame; they are not independent image captures. The canonical valid boxes have median area {area_median:.4f} of the displayed image. The candidate is crop-usable at object level, not a pixel-accurate fruit outline.
+
+YOLO boxes are source-defined whole-fruit boxes, not lesion polygons. Deterministic crop contact sheets show up to 20 source boxes per class; the prior full-image contact sheets show representative box overlays. The source states CVAT annotation and about 20% per-class independent review, but that does not certify every box. Labels were interpreted in the EXIF-corrected displayed-image coordinate frame; this matters for smartphone images with orientation tags. In a sampled EXIF-6 file (`Anthracnose (250).jpg`), boxes over raw storage pixels landed on foliage/grass, while EXIF-corrected boxes aligned with the visible fruit. The sample overlays/crops show that most sampled boxes isolate fruit, while some crops are small/soft-focus, partly occluded or truncated, and some retain context. This supports coarse fruit crops, not exact fruit-boundary masks. No disease mask or pixel-level bruise ground truth is created.
+
+## Comparison with current MangoResearch data
+
+### Image resolution, sharpness and capture context
+
+Harumanis originals are highly variable despite the source description: 145 images are 1443×2560, 71 are 2256×4000, 20 are 4000×2256, 14 are 651×1156, 14 are 721×1280, 6 are 2560×1443 and 2 are 1280×721. The earlier visual sample's reduced-image Laplacian-variance medians were ripe 74.72, rotten 66.98, semi-ripe 60.95 and unripe 60.31; texture and background influence this proxy, so it is not a blur label. Most views are fruit-dominant, with variable plain/dark/outdoor backgrounds.
+
+MangoFruitBD resolutions are 831 at 3456×4608, 169 at 4608×3456, 84 at 640×640, 71 at 1080×1920, 69 at 1920×1080, 65 at 4000×3000 and 21 at 6944×9280. The source class sample sharpness proxies/global gray means were Alternaria 71.2/91.2, Anthracnose 517.8/124.7, Healthy 189.3/120.5, Scab 319.1/120.1 (15 sampled images per class); these are affected by texture and background. The 83 disclosed Alternaria derivatives explain most of its 640×640 square domain; the visual sample shows controlled indoor/ground backgrounds for Alternaria and mostly orchard foliage/grass for Anthracnose, Healthy and Scab. This creates a strong class/background and resolution shortcut risk, especially for Alternaria.
+
+For reference, current Dataset A has 748 clean-candidate images in three nearly balanced maturity labels, mostly 6000×4000 (527), 5568×3712 (135) and 4272×2848 (88). Current Dataset C has 1,500 segmentation-task images at 224×224 and 1,493 exact pixel contents; all carry defective-only task labels, and its resized source masks remain unverified as bruise ground truth. Thus Harumanis offers larger, varied source captures but much fewer independent curated examples; MangoFruitBD offers many crop labels but a different disease task and pronounced domain confounding.
+
+| Use case | Current reference | v2 candidate comparison | Assessment |
+|---|---|---|---|
+| Ripeness | Dataset A clean candidate: 748 images, 250 ripe / 249 partially_ripe / 249 unripe; split/accuracy remains provisional | Harumanis: {len(h_candidates)} unique-content candidates in {haru_candidate_groups} groups; {', '.join(f'{k}={v}' for k,v in sorted(haru_label_counts.items()))} including a separate rotten class | Less data, label conflicts removed but source maturity label still unreviewed; use as external maturity set only after class mapping/review. Not a replacement. |
+| Defect / disease classification | Dataset C: 1,500 source images, 1,493 distinct exact pixel contents; all labeled defective; parent lineage unknown; masks are source-generated damage-region candidates with bruise semantics unverified | MangoFruitBD: {mfb_candidate_crop_count} crop candidates / {mfb_candidate_group_count} frame groups; {', '.join(f'{k}={v}' for k,v in sorted(mfb_candidate_rows_by_label.items()))}; no pixel-level damage masks | Adds healthy vs disease fruit labels but changes domain/task; orchard backgrounds and Alternaria's controlled background are confounded. External object-crop disease data, not equivalent to bruise classification/segmentation. |
+| Segmentation | C has 1,500 image/mask pairs, masks not fully human-verified and augmentation lineage unresolved | Harumanis has no fruit mask; MangoFruitBD has whole-fruit boxes only | Neither v2 source replaces pixel ground truth. MangoFruitBD cannot be treated as damage-mask data. |
+| HSV / CIELAB / thresholds | Current A/C images feed exploratory pipeline; fruit masks for A are heuristic unless manually approved | Harumanis mostly single close view with variable backgrounds/resolutions; MFB boxes include fruit crops but some context and varied orchard/controlled domains | Harumanis is plausible for external color stability/maturity checks; MFB color thresholds are strongly domain-confounded. Do not infer v2 performance from segmentation results on C. |
+
+### Data quality and leakage
+
+- Harumanis: source has 272 raw images, 202 distinct pixel contents; exact duplicate label conflicts affect 61 content groups. Its source README documents four maturity classes, five orchards, three seasons, and raw/augmented ancestry, but no per-fruit persistent ID. Near candidates are grouped conservatively only for possible future split containment.
+- MangoFruitBD: 1,310 image paths reduce to 1,205 exact contents before excluding augmentation; 105 exact duplicate groups include 103 Alternaria/Anthracnose label conflicts and 2 same-label repeat groups. The distributed source split has exact content across train/val/test; this curation deduplicates content and creates no new split. Augmentation parents remain unknown for 83 Alternaria derivatives.
+- The prior split audit found {haru_cross_split_count} exact-content groups crossing the published Harumanis train/validation/test folders and {mfb_cross_split_count} crossing MangoFruitBD source splits. The curated candidate has no split; future evaluation must split by `source_group` and review the near-candidate groups first.
+- MFB background is not balanced by class: Alternaria's 83 probable augmentation derivatives are square 640×640 controlled-background images, while other categories are mainly high-resolution orchard captures. The visual audit found Alternaria samples on indoor/ground surfaces and other classes in orchard foliage/grass. This is an obvious shortcut risk, not evidence that any trained model used the background.
+- Reported/observed licensing metadata for MFB conflicts: Mendeley v2 page states CC BY-NC 3.0, while archive README/license says CC BY-NC 4.0. Resolve with the authors/source before redistribution. Harumanis is linked to its Mendeley v4 record and DOI in its source README.
+
+## Recommendation
+
+- **Harumanis: B — add only as an external maturity dataset after review.** Do not replace Dataset A. The curated raw-image candidate is smaller (n={len(h_candidates)}; conservative groups={haru_candidate_groups}), has four classes including a small `rotten` class, uses a different cultivar/label definition, and exact label conflicts require source adjudication. Keep rotten separate.
+- **MangoFruitBD: B for external whole-fruit healthy/disease classification or detection; C for MangoResearch bruise segmentation and direct benchmark replacement.** Its object-level binary labels are usable as a distinct disease-vs-healthy candidate after held crops/duplicates are reviewed, but fine disease conflicts, probable augmentation lineage, and class/background confounding prevent a clean benchmark claim. The label `defective` here means source disease classes, not visually verified bruise.
+- **HSV/CIELAB:** Harumanis is the better external color/maturity candidate because the view is usually close and fruit-dominant, but plain-background/capture variation and label issues remain. MangoFruitBD should be used only with crop-aware analysis and domain-stratified reporting; its Alternaria domain difference can dominate color statistics.
+- No source is recommended for replacement (A). No current model or pipeline has been modified. The candidate manifests are not splits and are not ready to support official accuracy.
+
+## Artifact paths
+
+- Curated candidate (Harumanis unique images + MangoFruitBD fruit crops): `data/metadata/dataset_v2_curated_candidate_manifest.csv`
+- Held/review/provenance rows: `data/metadata/dataset_v2_review_manifest.csv`
+- Exact source groups: `data/metadata/dataset_v2_source_groups.csv`
+- Exact duplicate alias box consistency: `data/metadata/dataset_v2_duplicate_bbox_consistency.csv`
+- Non-exact near-duplicate candidates for both sources (not merged): `data/metadata/dataset_v2_near_duplicate_candidates.csv`
+- Conflict and box-crop contact sheets: `reports/dataset_v2_curation/contact_sheets/`
+- Prior full visual/source audit: `reports/dataset_v2_visual_audit.md`
+
+The zip-internal source paths in `original_path` use the form `archive.zip::member/path`. This preserves exact provenance without expanding or changing the raw data.
+"""
+    (ROOT / "reports" / "dataset_v2_curation_report.md").write_text(source_report, encoding="utf-8")
+
+    summary = {
+        "harumanis_source_images": len(haru_rows), "harumanis_exact_unique_contents": len(h_by_hash), "harumanis_exact_cross_label_groups": h_duplicate_conflict_count,
+        "harumanis_near_pairs_dhash_le_5": h_near_pairs, "harumanis_near_cross_label_pairs": h_near_cross_pairs, "harumanis_candidate_images": len(h_candidates), "harumanis_candidate_groups": haru_candidate_groups, "harumanis_candidate_labels": dict(haru_label_counts),
+        "mfb_source_images": len(mfb_rows), "mfb_exact_unique_images": unique_mfb_source_images, "mfb_source_boxes": sum(len(v) for v in boxes_by_path.values()), "mfb_fine_conflict_exact_groups": mfb_fine_conflict_groups, "mfb_binary_conflict_exact_groups": mfb_binary_conflict_groups,
+        "mfb_boxes_invalid": box_invalid_count, "mfb_exif_orientation_counts_unique_images": dict(mfb_exif_orientation_counts), "mfb_augmented_unique_images_excluded": mfb_aug_unique, "mfb_augmented_boxes_excluded": mfb_aug_box_count, "mfb_near_candidate_pairs_dhash_le_4": len(mfb_near_edges), "mfb_near_candidate_groups": near_group_counter, "mfb_near_cross_binary_pairs": len(near_cross_binary), "mfb_candidate_crop_rows": mfb_candidate_crop_count, "mfb_candidate_source_groups": mfb_candidate_group_count, "mfb_candidate_labels": dict(mfb_candidate_rows_by_label), "mfb_duplicate_alias_checks": len(alias_checks), "mfb_alias_geometry_inconsistent_groups": len(inconsistent_alias_sha)
+    }
+    (OUT / "curation_summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    print(f"Wrote {candidate_path}")
+    print(f"Wrote {review_path}")
+    print(f"Wrote {ROOT / 'reports' / 'dataset_v2_curation_report.md'}")
+
+
+if __name__ == "__main__":
+    main()

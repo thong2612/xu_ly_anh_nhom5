@@ -57,7 +57,10 @@ Desktop.ini
 /data/features/*.parquet
 
 # Model/checkpoint artifacts and local registries
-/models/
+/models/*
+!/models/classifiers/
+/models/classifiers/*
+!/models/classifiers/.gitkeep
 *.joblib
 *.pkl
 *.pickle
@@ -78,11 +81,5 @@ Desktop.ini
 **/wheelhouse/
 /release/
 
-# Keep only the final Phase 8 paper, its references, and its embedded figures
+# Research outputs remain local; the final release documents live in docs/
 /reports/*
-!/reports/phase08/
-/reports/phase08/*
-!/reports/phase08/mangoresearch_scientific_report.md
-!/reports/phase08/references.md
-!/reports/phase08/figures/
-!/reports/phase08/figures/**

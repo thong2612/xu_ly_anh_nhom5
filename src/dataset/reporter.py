@@ -163,7 +163,7 @@ def generate_report(config: dict[str, Any]) -> dict[str, Any]:
     }
     reports_root = project_path(config, config.get("reports_root", "reports"))
     reports_root.mkdir(parents=True, exist_ok=True)
-    (reports_root / "phase0_report.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    (reports_root / "dataset_report.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
     lines = [
         f"# Báo cáo khảo sát dataset — {result['project']}",
@@ -223,5 +223,5 @@ def generate_report(config: dict[str, Any]) -> dict[str, Any]:
         for item in split_plan.get("skipped", []):
             lines.append(f"- Chưa chia {item['dataset']} / {item['task']}: {item['reason']}")
         lines.append("")
-    (reports_root / "phase0_report.md").write_text("\n".join(lines), encoding="utf-8")
+    (reports_root / "dataset_report.md").write_text("\n".join(lines), encoding="utf-8")
     return result

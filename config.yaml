@@ -9,9 +9,9 @@ split:
     validation: 0.15
     test: 0.15
 
-# Phase 1 processes a deterministic, label-balanced sample from the clean
-# Phase 0.2 manifest. Full color arrays are cached only for these preview samples.
-phase1:
+# Color analysis processes a deterministic, label-balanced sample from the clean
+# manifest. Full color arrays are cached only for these preview samples.
+color_analysis:
   manifest_path: data/metadata/phase02_manifest.csv
   cache_dir: data/processed/phase1_cache
   output_dir: reports/phase1
@@ -23,7 +23,7 @@ phase1:
   abnormal_gain_bounds: [0.7, 1.3]
   abnormal_clipping_fraction: 0.01
 
-# Phase 2: one-channel threshold/morphology baselines. Outputs are heuristic
+# One-channel threshold/morphology baselines. Outputs are heuristic
 # review candidates only until genuine whole-fruit ground truth is annotated.
 segmentation:
   manifest_path: data/metadata/phase02_manifest.csv
@@ -61,9 +61,9 @@ segmentation:
     minimum_score: 0.45
     ambiguity_margin: 0.025
 
-# Phase 3: unsupervised candidate defect regions from color clusters.
+# K-Means analysis: unsupervised candidate defect regions from color clusters.
 # Generated outputs are exploratory; Dataset C lineage remains unresolved.
-phase3:
+kmeans:
   manifest_path: data/metadata/phase02_manifest.csv
   fruit_ground_truth_manifest: data/metadata/fruit_gt_manifest.csv
   phase2_mask_manifest: data/metadata/phase2_segmentation_manifest.csv
@@ -98,8 +98,8 @@ phase3:
     area_weight: 0.15
     continuity_weight: 0.10
 
-# Phase 4: color and K-Means feature tables. Phase 0.2 splits remain canonical.
-phase4:
+# Feature extraction: color and K-Means tables use the saved dataset splits.
+features:
   manifest_path: data/metadata/phase02_manifest.csv
   output_dir: data/features
   cache_dir: data/features/cache
@@ -129,11 +129,11 @@ phase4:
       yellow: [35.0, 70.0]
       green: [70.0, 165.0]
 
-# Phase 5 model selection uses train-only group-aware CV and a locked validation set.
-phase5:
+# Baseline classifier training uses train-only group-aware CV and validation.
+classifier_training:
   report_dir: reports
   report_path: reports/phase05_report.md
-  model_dir: models/phase05
+  model_dir: models/classifiers/baseline
   seed: 42
   cv_folds: 5
   n_jobs: 1
@@ -146,11 +146,12 @@ phase5:
   rf_max_depth: [null, 20]
   rf_min_samples_leaf: [1, 2]
 
-# Phase 5.1 creates a separate group-aware split and model registry; Phase 0.2
-# splits and Phase 5 artifacts remain unchanged for comparison.
-phase051:
+# Selected model training uses a separate group-aware split and model registry;
+# saved splits and artifacts remain unchanged for comparison.
+model_selection:
   seed: 20261023
   cv_folds: 5
+  model_dir: models/classifiers
   # Compact, predeclared tuning grid to keep the repeated group-CV audit tractable.
   model_grid:
     knn_neighbors: [5, 11]

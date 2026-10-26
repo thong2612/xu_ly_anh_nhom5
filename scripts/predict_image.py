@@ -9,11 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.demo.phase6 import infer_image, prediction_summary_for_cli
+from src.inference.pipeline import infer_image, prediction_summary_for_cli
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run MangoResearch Phase 6 inference on one JPG/PNG.")
+    parser = argparse.ArgumentParser(description="Run MangoResearch image inference on one JPG/PNG.")
     parser.add_argument("image", type=Path, help="Input JPG or PNG image")
     args = parser.parse_args()
     try:

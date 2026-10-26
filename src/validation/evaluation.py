@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
 
 from src.color.preprocess import decode_image
-from src.demo.phase6 import (
+from src.inference.pipeline import (
     MAX_UPLOAD_BYTES, DemoAssets, InputImageError, _predict, decode_upload, infer_image,
     load_demo_assets,
 )
@@ -25,7 +25,7 @@ from src.segmentation.metrics import segmentation_metrics
 from src.segmentation.pipeline import _resize_rgb, _run_candidates, _settings, _variant_image
 from src.utils.config import load_config, project_path
 
-LOGGER = logging.getLogger("mangoresearch.phase07")
+LOGGER = logging.getLogger("mangoresearch.evaluation")
 KMEANS_REVIEW_PATH = "data/metadata/phase07_kmeans_pair_review.csv"
 EXTERNAL_MANIFEST_PATH = "data/external_validation/external_manifest.csv"
 KMEANS_RESULT_PATH = "reports/phase03_results.csv"
@@ -1358,7 +1358,7 @@ def run_error_analysis(root: str | Path, assets: DemoAssets | None = None) -> di
 
 
 def _phase_metrics(root: Path, task: str | None = None, stage: str | None = None) -> list[dict[str, str]]:
-    return [row for row in _read_csv(root / "reports/phase051/phase051_metrics.csv")
+    return [row for row in _read_csv(root / "reports/model_selection/phase051_metrics.csv")
             if row.get("scope") == "overall" and (task is None or row.get("task") == task)
             and (stage is None or row.get("stage") == stage)]
 
@@ -1419,7 +1419,7 @@ def build_phase07_report(root: str | Path) -> Path:
     test_rip = next((r for r in selected_rip if r.get("model") == "KNN" and r.get("stage") == "test_locked"), {})
     val_def = next((r for r in selected_def if r.get("model") == "SVM_RBF" and r.get("stage") == "validation"), {})
     test_def = next((r for r in selected_def if r.get("model") == "SVM_RBF" and r.get("stage") == "test_locked"), {})
-    phase05 = _read_csv(root / "reports/phase051/phase051_vs_phase05.csv")
+    phase05 = _read_csv(root / "reports/model_selection/phase051_vs_phase05.csv")
     phase051_best = defaultdict(dict)
     for row in previous:
         if row.get("stage") == "validation" and row.get("scope") == "overall":
@@ -1575,16 +1575,16 @@ def build_phase07_report(root: str | Path) -> Path:
         "",
         "Phase 5.1 artifacts retain `official_accuracy_eligible=false`. Test values are reported only as a provisional historical reference; this Phase 7 workflow does not tune on test. No Accuracy is presented as an official benchmark.",
         "", "## Kiểm thử và thực thi", "",
-        "`scripts/phase07.py run` đã chạy end-to-end trên dữ liệu workspace: tạo review pack, error analysis, external import/evaluation, segmentation/K-Means guarded evaluation, robustness và báo cáo. Robustness sau đó được chạy lại riêng trên 5 ảnh từ test split để xác minh các biến thể vượt giới hạn kích thước được mã hóa an toàn; không ảnh nào bị ghi vào raw. Toàn bộ unit test hiện có: **89 passed**.",
+        "`scripts/evaluate.py run` đã chạy end-to-end trên dữ liệu workspace: tạo review pack, error analysis, external import/evaluation, segmentation/K-Means guarded evaluation, robustness và báo cáo. Robustness sau đó được chạy lại riêng trên 5 ảnh từ test split để xác minh các biến thể vượt giới hạn kích thước được mã hóa an toàn; không ảnh nào bị ghi vào raw. Toàn bộ unit test hiện có: **89 passed**.",
         "", "## Lệnh chính", "",
         "```powershell",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py run",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py kmeans-review --image-id IMAGE_ID --status approved --reviewer 'Reviewer' --notes 'Mask aligned and defect region confirmed'",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py external-import",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py external-review --image-id EXT_ID --status approved --ripeness-label ripe --source-group fruit_01 --reviewer 'Reviewer'",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py external-evaluate",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py fruit-evaluate",
-        ".\\.venv\\Scripts\\python.exe scripts/phase07.py robustness --limit-images 5",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py run",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py kmeans-review --image-id IMAGE_ID --status approved --reviewer 'Reviewer' --notes 'Mask aligned and defect region confirmed'",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py external-import",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py external-review --image-id EXT_ID --status approved --ripeness-label ripe --source-group fruit_01 --reviewer 'Reviewer'",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py external-evaluate",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py fruit-evaluate",
+        ".\\.venv\\Scripts\\python.exe scripts/evaluate.py robustness --limit-images 5",
         "```", "",
     ]
     output = root / "reports/phase07_report.md"

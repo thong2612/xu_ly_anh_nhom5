@@ -16,14 +16,14 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from src.color.preprocess import ImageFrame, decode_image, gray_world
-from src.features.phase4 import (
+from src.features.extraction import (
     _analysis_raster, _color_features, _derived_seed,
     _kmeans_features_from_outcome, _valid_working_mask,
 )
-from src.segmentation.phase3 import Phase2FruitMaskProvider, cluster_and_detect, defect_area_ratio
+from src.segmentation.kmeans import Phase2FruitMaskProvider, cluster_and_detect, defect_area_ratio
 from src.utils.config import load_config, project_path
 
-LOGGER = logging.getLogger("mangoresearch.phase06")
+LOGGER = logging.getLogger("mangoresearch.inference")
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_PIXELS = 25_000_000
 ALLOWED_FORMATS = {"JPEG", "PNG", "MPO"}
@@ -50,11 +50,11 @@ class DemoAssets:
 def load_demo_assets(root: str | Path | None = None) -> DemoAssets:
     project_root = Path(root or Path(__file__).resolve().parents[2]).resolve()
     config = load_config(project_root / "config.yaml")
-    schema_path = project_path(config, config.get("phase4", {}).get("schema_path", "data/features/feature_schema.json"))
+    schema_path = project_path(config, config.get("features", {}).get("schema_path", "data/features/feature_schema.json"))
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     artifacts: dict[str, dict[str, Any]] = {}
     for task in ("ripeness", "defect"):
-        path = project_root / "models" / "phase051" / f"{task}_selected.joblib"
+        path = project_root / "models" / "classifiers" / f"{task}_selected.joblib"
         if not path.is_file():
             raise FileNotFoundError(f"Phase 5.1 model is missing: {path}")
         artifact = joblib.load(path)
@@ -118,7 +118,7 @@ def decode_upload(payload: bytes, filename: str, max_bytes: int = MAX_UPLOAD_BYT
 def _run_config_for_demo(config: dict[str, Any], scratch: Path) -> dict[str, Any]:
     runtime = copy.deepcopy(config)
     runtime["segmentation"]["mask_dir"] = str(scratch / "fruit_masks")
-    runtime["phase3"]["phase2_mask_manifest"] = str(scratch / "no_cached_masks.csv")
+    runtime["kmeans"]["phase2_mask_manifest"] = str(scratch / "no_cached_masks.csv")
     return runtime
 
 
@@ -180,8 +180,8 @@ def infer_image(payload: bytes, filename: str, assets: DemoAssets | None = None)
     frame = decode_upload(payload, filename)
     raw_digest = hashlib.sha256(payload).hexdigest()
     image_id = f"demo_{raw_digest[:20]}"
-    phase4 = assets.config.get("phase4", {})
-    phase3 = assets.config.get("phase3", {})
+    phase4 = assets.config.get("features", {})
+    phase3 = assets.config.get("kmeans", {})
     analysis_rgb, analysis_alpha = _analysis_raster(
         frame.rgb, frame.alpha, int(phase4.get("max_analysis_side", 512)))
     gray_result = gray_world(analysis_rgb, analysis_alpha)
@@ -193,7 +193,7 @@ def infer_image(payload: bytes, filename: str, assets: DemoAssets | None = None)
     # same configured thresholding code; no Phase 0.2 mask or GT is used.
     scratch_parent = assets.root / "data" / "features"
     scratch_parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix=".phase06_", dir=scratch_parent) as temp_name:
+    with tempfile.TemporaryDirectory(prefix=".inference_", dir=scratch_parent) as temp_name:
         scratch = Path(temp_name)
         runtime_config = _run_config_for_demo(assets.config, scratch)
         provider = Phase2FruitMaskProvider(

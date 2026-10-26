@@ -6,7 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from src.demo.phase6 import InputImageError, infer_image, load_demo_assets
+from src.inference.pipeline import InputImageError, infer_image, load_demo_assets
 
 
 ROOT = Path(__file__).resolve().parent
@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 st.set_page_config(page_title="MangoResearch · Demo", page_icon="🥭", layout="wide")
 
 
-@st.cache_resource(show_spinner="Đang nạp model Phase 5.1…")
+@st.cache_resource(show_spinner="Đang nạp classifier…")
 def _assets():
     return load_demo_assets(ROOT)
 
@@ -59,15 +59,15 @@ if uploaded is not None:
             with st.spinner("Đang phân tích ảnh…"):
                 assets = _assets()
                 result = infer_image(uploaded.getvalue(), uploaded.name, assets)
-            st.session_state["phase06_result"] = result
-            st.session_state["phase06_filename"] = uploaded.name
+            st.session_state["inference_result"] = result
+            st.session_state["inference_filename"] = uploaded.name
         except InputImageError as exc:
             st.error(str(exc))
         except Exception as exc:
-            logging.exception("Phase 6 inference failed")
+            logging.exception("Image inference failed")
             st.error(f"Không thể phân tích ảnh: {type(exc).__name__}. Kiểm tra model và cấu hình dự án.")
 
-result = st.session_state.get("phase06_result")
+result = st.session_state.get("inference_result")
 if uploaded is None:
     result = None
 elif result is not None:

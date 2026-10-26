@@ -20,7 +20,7 @@ import sklearn
 from PIL import Image, ImageDraw, ImageFont
 from sklearn.model_selection import StratifiedGroupKFold, GridSearchCV
 
-from src.models.phase5 import (
+from src.models.training import (
     FEATURE_EXPERIMENTS, LABELS, _make_pipeline, _metric_payload,
     _matrix_for_experiment,
 )
@@ -180,7 +180,7 @@ def _make_contact_sheets(rows: list[dict[str, Any]], root: Path, output_dir: Pat
 
 def audit_candidates(config: dict[str, Any]) -> dict[str, Any]:
     root = Path(config["_project_root"])
-    output_dir = project_path(config, "reports/phase051")
+    output_dir = project_path(config, "reports/model_selection")
     output_dir.mkdir(parents=True, exist_ok=True)
     feature_by_task: dict[str, dict[str, dict[str, str]]] = {}
     source_by_task: dict[str, dict[str, dict[str, str]]] = {}
@@ -249,7 +249,7 @@ def audit_candidates(config: dict[str, Any]) -> dict[str, Any]:
 
 def apply_visual_pair_review(config: dict[str, Any]) -> dict[str, Any]:
     """Apply the curated, pair-specific review decisions to a fresh audit."""
-    path = project_path(config, "reports/phase051/near_duplicate_pair_audit.csv")
+    path = project_path(config, "reports/model_selection/near_duplicate_pair_audit.csv")
     rows = _read_csv(path)
     decision_path = path.parent / "pair_review_decisions.csv"
     manual_rows = _read_csv(decision_path) if decision_path.is_file() else []
@@ -365,7 +365,7 @@ def _grouped_split_indices(labels: np.ndarray, groups: np.ndarray, seed: int,
 def prepare_splits(config: dict[str, Any]) -> dict[str, Any]:
     root = Path(config["_project_root"])
     phase051_dir = project_path(config, "data/splits/phase051")
-    audit_path = project_path(config, "reports/phase051/near_duplicate_pair_audit.csv")
+    audit_path = project_path(config, "reports/model_selection/near_duplicate_pair_audit.csv")
     reviewed: list[dict[str, str]] = _read_csv(audit_path) if audit_path.is_file() else []
     confirmed_pairs: list[tuple[str, str]] = []
     review_by_pair: dict[frozenset[str], str] = {}
@@ -446,7 +446,7 @@ def prepare_splits(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def _phase051_grid(model_name: str, config: dict[str, Any]) -> dict[str, list[Any]]:
-    settings = config.get("phase051", {}).get("model_grid", {})
+    settings = config.get("model_selection", {}).get("model_grid", {})
     if model_name == "KNN":
         return {"classifier__n_neighbors": list(settings.get("knn_neighbors", [5, 11])),
                 "classifier__weights": list(settings.get("knn_weights", ["uniform", "distance"]))}
@@ -518,11 +518,12 @@ def _rows_for_metrics(task: str, experiment: str, model: str, stage: str,
 
 def run_phase051_models(config: dict[str, Any]) -> dict[str, Any]:
     schema = json.loads(project_path(config, "data/features/feature_schema.json").read_text(encoding="utf-8"))
-    seed = int(config.get("phase051", {}).get("seed", config.get("split", {}).get("seed", 20261023)))
-    requested_folds = int(config.get("phase051", {}).get("cv_folds", 5))
+    settings = config.get("model_selection", {})
+    seed = int(settings.get("seed", config.get("split", {}).get("seed", 20261023)))
+    requested_folds = int(settings.get("cv_folds", 5))
     model_names = ("KNN", "SVM_RBF", "RandomForest")
-    report_dir = project_path(config, "reports/phase051")
-    model_dir = project_path(config, "models/phase051")
+    report_dir = project_path(config, "reports/model_selection")
+    model_dir = project_path(config, settings.get("model_dir", "models/classifiers"))
     report_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
     search_rows: list[dict[str, Any]] = []
@@ -712,14 +713,14 @@ def run_phase051_models(config: dict[str, Any]) -> dict[str, Any]:
 
 def write_phase051_report(config: dict[str, Any], audit_summary: dict[str, Any],
                           split_summary: dict[str, Any], model_result: dict[str, Any]) -> Path:
-    report_path = project_path(config, "reports/phase051_report.md")
+    report_path = project_path(config, "reports/model_selection_report.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
     search_rows = model_result["search_rows"]
     lines = [
         "# MangoResearch — Phase 5.1: Leakage audit và đánh giá lại", "",
         "## Phương pháp và kiểm soát", "",
         "Phase 0.2 split và raw images được giữ nguyên. Split Phase 5.1 được lưu riêng; known lineage groups, raw-file SHA-256, decoded-pixel SHA-256 và các cặp đã xác nhận bằng xem ảnh được gộp thành group. Các cặp chưa xác minh được giữ cờ rủi ro. dHash chỉ tạo candidate, không tự xác nhận danh tính.",
-        "SSIM được tính trên ảnh xám sau khi resize giữ tỷ lệ và letterbox vào 256×256 (cửa sổ Gaussian 11×11). File/pixel hashes lấy từ manifest Phase 0.2. Contact sheets và quyết định xem ảnh được lưu dưới `reports/phase051/`.",
+        "SSIM được tính trên ảnh xám sau khi resize giữ tỷ lệ và letterbox vào 256×256 (cửa sổ Gaussian 11×11). File/pixel hashes lấy từ manifest Phase 0.2. Contact sheets và quyết định xem ảnh được lưu dưới `reports/model_selection/`.",
         "Split mới dùng seed=20261023: StratifiedGroupKFold 20 folds, gán 14 fold train, 3 validation, 3 test; chọn trong 1,800 hoán vị cố định cách gán 6 fold holdout có tổng số ảnh và số nhãn gần tỷ lệ mục tiêu nhất. Mọi group đã biết nằm trong một split. Validation chọn feature/model; test chỉ đánh giá một lần cho cấu hình đã khóa.",
         "Imputer, scaler và classifier được fit trong scikit-learn Pipeline trên train mới; GridSearchCV dùng 5-fold StratifiedGroupKFold trên train. Grid cố định: KNN k={5,11}, weights={uniform,distance}; SVM-RBF C={1,10}, gamma=scale; Random Forest n_estimators={100,200}, max_depth={None,20}, min_samples_leaf=1. Chỉ các cột thuộc feature sets trong `feature_schema.json` đi vào X. Label chỉ là y; image_id, đường dẫn, nguồn, split, group, mask và ground-truth mask không phải feature. Không có ground-truth defect mask nào được đưa vào input.",
         "",
@@ -727,7 +728,7 @@ def write_phase051_report(config: dict[str, Any], audit_summary: dict[str, Any],
         "| Nhiệm vụ | Candidate xuyên Phase 0.2 split | dHash=0 | Cặp có SSIM | File SHA khớp | Pixel SHA khớp | SSIM ≥ 0.96 | Đã xác nhận cùng nguồn | Bác bỏ | Chưa xác minh |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
-    pair_rows = _read_csv(project_path(config, "reports/phase051/near_duplicate_pair_audit.csv"))
+    pair_rows = _read_csv(project_path(config, "reports/model_selection/near_duplicate_pair_audit.csv"))
     for task in ("ripeness", "defect"):
         rows = [r for r in pair_rows if r["task"] == task]
         counts = Counter(r.get("review_decision", "unverified") for r in rows)
@@ -816,8 +817,8 @@ def write_phase051_report(config: dict[str, Any], audit_summary: dict[str, Any],
             lines.append("")
     err_counts = Counter((r["task"], r["stage"]) for r in model_result["errors"])
     lines.extend(["## Kết luận và giới hạn", "",
-        f"- Sai dự đoán validation (tất cả cấu hình) và test (chỉ winner) được lưu tại `reports/phase051/phase051_misclassifications.csv`; counts: `{dict(err_counts)}`.",
-        "- Phase 5 models/reports không bị ghi đè; Phase 5.1 search, metrics, confusion, errors và toàn bộ tuned pipelines nằm riêng trong `reports/phase051/` và `models/phase051/`.",
+        f"- Sai dự đoán validation (tất cả cấu hình) và test (chỉ winner) được lưu tại `reports/model_selection/phase051_misclassifications.csv`; counts: `{dict(err_counts)}`.",
+        "- Phase 5 models/reports không bị ghi đè; Phase 5.1 search, metrics, confusion, errors và toàn bộ tuned pipelines nằm riêng trong `reports/model_selection/` và `models/classifiers/`.",
         "- Còn near-duplicate candidate chưa xác minh và augmentation/source lineage chưa đầy đủ. Vì vậy `official_accuracy_eligible=false`, toàn bộ kết quả Phase 5.1 vẫn exploratory; không tuyên bố benchmark chính thức.",
         "- Kết quả defect classification không xác minh ground-truth segmentation. Các feature K-Means có thể phản ánh khác biệt phân bố giữa ảnh classification và segmentation; không suy rộng metric segmentation sang classification.",
         "- Đề xuất: chọn cấu hình theo validation/CV ở trên để tiếp tục nghiên cứu; trước báo cáo accuracy chính thức cần giải quyết lineage/candidate còn rủi ro và xem xét cặp same-source có nhãn healthy/defective mâu thuẫn.",

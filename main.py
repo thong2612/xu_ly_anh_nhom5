@@ -1,4 +1,4 @@
-"""Convenience entry point for the MangoResearch Phase 0 CLI."""
+"""Convenience entry point for the MangoResearch dataset CLI."""
 
 from src.dataset.cli import main
 

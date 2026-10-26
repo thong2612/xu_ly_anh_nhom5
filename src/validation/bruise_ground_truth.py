@@ -820,10 +820,10 @@ def _paired_predictions(root: Path, approved_rows: list[dict[str, str]],
                         prediction_dir: str = PREDICTION_DIR,
                         generated_fruit_manifest: str = GENERATED_FRUIT_MANIFEST,
                         fruit_mask_dir: str = "data/processed/bruise_gt_fruit_masks") -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
-    from src.segmentation.phase3 import Phase2FruitMaskProvider, cluster_and_detect
+    from src.segmentation.kmeans import Phase2FruitMaskProvider, cluster_and_detect
 
     config = load_config(root / "config.yaml")
-    phase3 = dict(config.get("phase3", {}))
+    phase3 = dict(config.get("kmeans", {}))
     phase_settings = {
         "seed": int(phase3.get("seed", 20261023)),
         "attempts": int(phase3.get("attempts", 1)),

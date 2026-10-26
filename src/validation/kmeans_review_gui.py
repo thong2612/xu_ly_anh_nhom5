@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image, ImageTk
 
 from src.color.preprocess import decode_image
-from src.validation.phase07 import (
+from src.validation.evaluation import (
     KMEANS_REVIEW_PATH, _mask_image, evaluate_reviewed_kmeans_pairs, set_kmeans_pair_review,
 )
 from src.validation.kmeans_prereview import run_kmeans_prereview

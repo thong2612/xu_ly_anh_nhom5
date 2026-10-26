@@ -451,7 +451,7 @@ def test_report_records_download_archive_status_and_size(tmp_path: Path) -> None
         "size_bytes": archive_path.stat().st_size,
         "valid_zip": True,
     }]
-    assert "mango_v1.zip" in (tmp_path / "reports" / "phase0_report.md").read_text(encoding="utf-8")
+    assert "mango_v1.zip" in (tmp_path / "reports" / "dataset_report.md").read_text(encoding="utf-8")
 
 
 def test_empty_manifest_keeps_schema_through_split_and_validates(tmp_path: Path) -> None:

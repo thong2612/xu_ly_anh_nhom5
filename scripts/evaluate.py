@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.validation.phase07 import (
+from src.validation.evaluation import (
     build_phase07_report, evaluate_approved_fruit_masks, evaluate_external,
     evaluate_reviewed_kmeans_pairs, import_external_images, prepare_review_workflows,
     run_error_analysis, run_phase07, run_robustness, set_external_review,
@@ -18,7 +18,7 @@ from src.validation.phase07 import (
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="MangoResearch Phase 7 validation workflows")
+    parser = argparse.ArgumentParser(description="MangoResearch evaluation workflows")
     sub = parser.add_subparsers(dest="command", required=True)
     prepare = sub.add_parser("prepare", help="Create external manifest, 50-pair review pack, and empty guarded metric tables")
     prepare.add_argument("--review-limit", type=int, default=50)
@@ -39,13 +39,13 @@ def _parser() -> argparse.ArgumentParser:
     external_review.add_argument("--source-group", default="")
     external_review.add_argument("--reviewer", default="")
     external_review.add_argument("--notes", default="")
-    sub.add_parser("external-evaluate", help="Run locked Phase 5.1 artifacts on manually labeled external images")
-    sub.add_parser("fruit-evaluate", help="Evaluate Phase 2 configurations only against human-approved whole-fruit masks")
-    error = sub.add_parser("error-analysis", help="Create per-image Phase 5.1 test error analysis and contact sheets")
+    sub.add_parser("external-evaluate", help="Run locked classifiers on manually labeled external images")
+    sub.add_parser("fruit-evaluate", help="Evaluate segmentation configurations only against human-approved whole-fruit masks")
+    error = sub.add_parser("error-analysis", help="Create per-image locked test error analysis and contact sheets")
     robustness = sub.add_parser("robustness", help="Run paired mild input perturbations on real mango images")
     robustness.add_argument("--limit-images", type=int, default=5)
-    sub.add_parser("report", help="Regenerate the Phase 7 research synthesis report")
-    run = sub.add_parser("run", help="Prepare workflows and run feasible Phase 7 checks on current data")
+    sub.add_parser("report", help="Regenerate the research evaluation report")
+    run = sub.add_parser("run", help="Prepare workflows and run feasible checks on current data")
     run.add_argument("--robustness-limit", type=int, default=5)
     return parser
 

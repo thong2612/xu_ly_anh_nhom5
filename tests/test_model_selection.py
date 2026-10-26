@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import csv
 
-from src.models.phase051 import (PAIR_FIELDS, _grouped_split_indices, _ssim_gray,
+from src.models.model_selection import (PAIR_FIELDS, _grouped_split_indices, _ssim_gray,
                                  _stable_group_ids, apply_visual_pair_review)
 
 
@@ -53,7 +53,7 @@ def test_unlinked_images_keep_distinct_group_ids():
 
 
 def test_pair_review_uses_pair_specific_decision_not_dhash(tmp_path):
-    output = tmp_path / "reports" / "phase051"
+    output = tmp_path / "reports" / "model_selection"
     output.mkdir(parents=True)
     rows = [
         {"task": "ripeness", "image_id_a": "a", "image_id_b": "b", "path_a": "a.jpg", "path_b": "b.jpg",

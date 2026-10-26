@@ -11,15 +11,15 @@ from src.dataset.downloader import AuthenticationRequired, DownloadError, Mendel
 from src.dataset.extractor import extract_archives
 from src.dataset.inspector import inspect_datasets
 from src.dataset.organizer import organize_images
-from src.dataset.phase02 import run_phase02
+from src.dataset.curation import run_phase02
 from src.dataset.reporter import generate_report
 from src.dataset.splitter import prepare_splits
 from src.dataset.validator import validate_manifest
 from src.color.pipeline import run_phase1
 from src.segmentation.pipeline import approve_fruit_masks, import_fruit_masks, run_phase2
 from src.segmentation.annotation_gui import annotate_fruit_masks
-from src.segmentation.phase3 import run_phase3
-from src.features.phase4 import run_phase4
+from src.segmentation.kmeans import run_phase3
+from src.features.extraction import run_phase4
 from src.utils.config import CONFIG_PATH, load_config
 from src.utils.config import project_path
 
@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("mangoresearch")
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="MangoResearch Phase 0 dataset manager")
+    parser = argparse.ArgumentParser(description="MangoResearch dataset and feature manager")
     parser.add_argument("--config", default=str(CONFIG_PATH), help="Đường dẫn config.yaml")
     subparsers = parser.add_subparsers(dest="command", required=True)
     for name, help_text in (
@@ -39,24 +39,24 @@ def _parse_args() -> argparse.Namespace:
         ("validate", "Kiểm tra lại đường dẫn, ảnh/mask và rò rỉ split"),
         ("organize", "Sao chép ảnh theo task/nhãn đã xác minh"),
         ("split", "Tạo split 70/15/15 khi đủ điều kiện"),
-        ("pipeline", "Chạy toàn bộ các bước Phase 0"),
+        ("pipeline", "Chạy toàn bộ các bước chuẩn bị dataset đã cấu hình"),
     ):
         child = subparsers.add_parser(name, help=help_text)
         child.add_argument("--dataset", action="append", help="Key dataset; lặp lại để chọn nhiều nguồn")
     subparsers.add_parser("report", help="Xuất báo cáo Markdown/JSON")
-    subparsers.add_parser("phase02", help="Audit trùng lặp/lineage, chuẩn hóa mask và tạo split provisional")
-    phase1 = subparsers.add_parser("phase1", help="So sánh Gray World và thống kê màu HSV/CIELAB trên mẫu sạch")
-    phase1.add_argument("--dataset", action="append", help="Key dataset; lặp lại để chọn nhiều nguồn")
-    phase1.add_argument("--samples-per-group", type=int, help="Số ảnh cho mỗi nhóm dataset/task/nhãn")
-    phase1.add_argument("--no-gray-world", action="store_true", help="Chỉ chạy cấu hình gốc; cache tách biệt")
-    phase1.add_argument("--force", action="store_true", help="Bỏ qua cache và tính lại mẫu đã chọn")
-    phase2 = subparsers.add_parser("phase2-segmentation", help="Chạy baseline phân đoạn xoài một kênh trên mẫu sạch")
-    phase2.add_argument("--dataset", action="append", help="Key dataset; lặp lại để chọn nhiều nguồn")
-    phase2.add_argument("--samples-per-group", type=int, help="Số ảnh mỗi nhóm dataset/task/nhãn")
-    phase2.add_argument("--limit", type=int, help="Giới hạn tổng số mẫu sau khi chọn xác định")
-    phase2.add_argument("--image-id", help="Chọn một image_id thuộc mẫu sạch được chọn")
-    phase2.add_argument("--no-gray-world", action="store_true", help="Chỉ chạy E1; cache được phân biệt")
-    phase2.add_argument("--force", action="store_true", help="Tính lại dù có cache")
+    subparsers.add_parser("curate", help="Audit trùng lặp/lineage, chuẩn hóa mask và tạo split provisional")
+    color_analysis = subparsers.add_parser("analyze-color", help="So sánh Gray World và thống kê màu HSV/CIELAB trên mẫu sạch")
+    color_analysis.add_argument("--dataset", action="append", help="Key dataset; lặp lại để chọn nhiều nguồn")
+    color_analysis.add_argument("--samples-per-group", type=int, help="Số ảnh cho mỗi nhóm dataset/task/nhãn")
+    color_analysis.add_argument("--no-gray-world", action="store_true", help="Chỉ chạy cấu hình gốc; cache tách biệt")
+    color_analysis.add_argument("--force", action="store_true", help="Bỏ qua cache và tính lại mẫu đã chọn")
+    segmentation = subparsers.add_parser("segment-fruit", help="Chạy baseline phân đoạn xoài một kênh trên mẫu sạch")
+    segmentation.add_argument("--dataset", action="append", help="Key dataset; lặp lại để chọn nhiều nguồn")
+    segmentation.add_argument("--samples-per-group", type=int, help="Số ảnh mỗi nhóm dataset/task/nhãn")
+    segmentation.add_argument("--limit", type=int, help="Giới hạn tổng số mẫu sau khi chọn xác định")
+    segmentation.add_argument("--image-id", help="Chọn một image_id thuộc mẫu sạch được chọn")
+    segmentation.add_argument("--no-gray-world", action="store_true", help="Chỉ chạy E1; cache được phân biệt")
+    segmentation.add_argument("--force", action="store_true", help="Tính lại dù có cache")
     annotate = subparsers.add_parser("annotate-fruit-masks", help="Mở GUI polygon để tạo mask manual của toàn quả")
     annotate.add_argument("--limit", type=int, help="Giới hạn số candidate đầu vào")
     importer = subparsers.add_parser("import-fruit-masks", help="Import mask 0/255 manual đã lưu theo image_id.png")
@@ -64,20 +64,20 @@ def _parse_args() -> argparse.Namespace:
     approver = subparsers.add_parser("approve-fruit-masks", help="Xác nhận semantic thủ công cho mask đã import và kiểm tra định dạng")
     approver.add_argument("--image-id", action="append", required=True,
                           help="ID đã được người chú giải kiểm tra là mask toàn quả; lặp lại cho nhiều ảnh")
-    phase3 = subparsers.add_parser("phase3-kmeans", help="Chạy K-Means HSV/Lab trên fruit mask và đánh giá exploratory với Dataset C")
-    phase3.add_argument("--limit", type=int, help="Giới hạn số cặp Dataset C đầu tiên; mặc định chạy toàn bộ cặp đủ điều kiện")
-    phase3.add_argument("--mode", action="append", choices=["heuristic", "approved"],
+    kmeans = subparsers.add_parser("analyze-kmeans", help="Chạy K-Means HSV/Lab trên fruit mask và đánh giá exploratory với Dataset C")
+    kmeans.add_argument("--limit", type=int, help="Giới hạn số cặp Dataset C đầu tiên; mặc định chạy toàn bộ cặp đủ điều kiện")
+    kmeans.add_argument("--mode", action="append", choices=["heuristic", "approved"],
                         help="Chế độ mask; lặp lại để chọn cả hai, mặc định theo config")
-    phase3.add_argument("--force", action="store_true", help="Bỏ qua cache K-Means và tính lại")
-    phase4 = subparsers.add_parser("phase4-features", help="Trích xuất feature HSV/Lab và K-Means cho các split Phase 0.2")
-    phase4.add_argument("--task", action="append", choices=["ripeness", "defect"],
+    kmeans.add_argument("--force", action="store_true", help="Bỏ qua cache K-Means và tính lại")
+    feature_extraction = subparsers.add_parser("extract-features", help="Trích xuất feature HSV/Lab và K-Means theo các split đã lưu")
+    feature_extraction.add_argument("--task", action="append", choices=["ripeness", "defect"],
                         help="Chọn nhánh; mặc định chạy cả ripeness và defect")
-    phase4.add_argument("--limit", type=int, help="Giới hạn số ảnh mỗi task để kiểm tra nhanh")
-    phase4.add_argument("--force", action="store_true", help="Bỏ qua cache feature và trích xuất lại")
-    phase5 = subparsers.add_parser("phase5-train", help="Tuning, train/CV/validation/test cho Phase 4 feature tables")
-    phase5.add_argument("--task", action="append", choices=["ripeness", "defect"],
+    feature_extraction.add_argument("--limit", type=int, help="Giới hạn số ảnh mỗi task để kiểm tra nhanh")
+    feature_extraction.add_argument("--force", action="store_true", help="Bỏ qua cache feature và trích xuất lại")
+    classifier_training = subparsers.add_parser("train-classifiers", help="Tuning, train/CV/validation/test cho các bảng feature")
+    classifier_training.add_argument("--task", action="append", choices=["ripeness", "defect"],
                         help="Chọn task; mặc định chạy cả hai")
-    predict = subparsers.add_parser("phase5-predict", help="Predict từ JSON mapping các feature Phase 4")
+    predict = subparsers.add_parser("predict-features", help="Dự đoán từ JSON mapping các feature")
     predict.add_argument("--model", required=True, help="Model artifact .joblib")
     predict.add_argument("--features-json", required=True, help="JSON object gồm feature_name: value")
     subparsers.add_parser("list-datasets", help="Liệt kê nguồn đã cấu hình và số file đã import")
@@ -175,10 +175,10 @@ def main() -> int:
     if command == "report":
         print(generate_report(config))
         return 0
-    if command == "phase02":
+    if command == "curate":
         print(run_phase02(config))
         return 0
-    if command == "phase1":
+    if command == "analyze-color":
         print(run_phase1(
             config,
             dataset_keys=args.dataset,
@@ -187,7 +187,7 @@ def main() -> int:
             force=args.force,
         ))
         return 0
-    if command == "phase2-segmentation":
+    if command == "segment-fruit":
         print(run_phase2(
             config,
             dataset_keys=args.dataset,
@@ -206,26 +206,26 @@ def main() -> int:
         return 0
     if command == "approve-fruit-masks":
         manifest_path = approve_fruit_masks(config, args.image_id)
-        from src.validation.phase07 import build_phase07_report, evaluate_approved_fruit_masks
+        from src.validation.evaluation import build_phase07_report, evaluate_approved_fruit_masks
         root = Path(config["_project_root"])
         evaluation = evaluate_approved_fruit_masks(root)
         report_path = build_phase07_report(root)
         print(json.dumps({"approved_manifest": str(manifest_path), "fruit_metrics": evaluation,
-                          "phase07_report": str(report_path)}, ensure_ascii=False, indent=2, default=str))
+                          "evaluation_report": str(report_path)}, ensure_ascii=False, indent=2, default=str))
         return 0
-    if command == "phase3-kmeans":
+    if command == "analyze-kmeans":
         print(run_phase3(config, limit=args.limit, modes=args.mode, force=args.force))
         return 0
-    if command == "phase4-features":
+    if command == "extract-features":
         print(run_phase4(config, tasks=args.task, limit=args.limit, force=args.force))
         return 0
-    if command == "phase5-train":
-        from src.models.phase5 import run_phase5
+    if command == "train-classifiers":
+        from src.models.training import run_phase5
         print(run_phase5(config, tasks=args.task))
         return 0
-    if command == "phase5-predict":
+    if command == "predict-features":
         import json
-        from src.models.phase5 import predict_from_features
+        from src.models.training import predict_from_features
         model_path = project_path(config, args.model)
         values_path = project_path(config, args.features_json)
         values = json.loads(values_path.read_text(encoding="utf-8"))

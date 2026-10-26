@@ -565,18 +565,18 @@ def run_phase1(config: dict[str, Any], dataset_keys: list[str] | None = None,
                samples_per_group: int | None = None, gray_world_enabled: bool | None = None,
                force: bool = False) -> Path:
     """Run Phase 1 color analysis on a deterministic subset of Phase 0.2 clean data."""
-    phase1 = config.get("phase1", {})
+    color_config = config.get("color_analysis", {})
     project_root = Path(config["_project_root"])
-    manifest_path = project_path(config, phase1.get("manifest_path", "data/metadata/phase02_manifest.csv"))
-    cache_dir = project_path(config, phase1.get("cache_dir", "data/processed/phase1_cache"))
-    report_root = project_path(config, phase1.get("output_dir", "reports/phase1"))
-    report_path = project_path(config, phase1.get("report_path", "reports/phase01_report.md"))
-    enabled = bool(phase1.get("gray_world_enabled", True)) if gray_world_enabled is None else gray_world_enabled
-    per_group = int(samples_per_group if samples_per_group is not None else phase1.get("samples_per_group", 2))
-    seed = int(phase1.get("seed", 20261023))
-    preview_side = int(phase1.get("preview_max_side", 512))
-    gain_bounds = tuple(float(value) for value in phase1.get("abnormal_gain_bounds", [0.7, 1.3]))
-    clip_threshold = float(phase1.get("abnormal_clipping_fraction", 0.01))
+    manifest_path = project_path(config, color_config.get("manifest_path", "data/metadata/phase02_manifest.csv"))
+    cache_dir = project_path(config, color_config.get("cache_dir", "data/processed/phase1_cache"))
+    report_root = project_path(config, color_config.get("output_dir", "reports/phase1"))
+    report_path = project_path(config, color_config.get("report_path", "reports/phase01_report.md"))
+    enabled = bool(color_config.get("gray_world_enabled", True)) if gray_world_enabled is None else gray_world_enabled
+    per_group = int(samples_per_group if samples_per_group is not None else color_config.get("samples_per_group", 2))
+    seed = int(color_config.get("seed", 20261023))
+    preview_side = int(color_config.get("preview_max_side", 512))
+    gain_bounds = tuple(float(value) for value in color_config.get("abnormal_gain_bounds", [0.7, 1.3]))
+    clip_threshold = float(color_config.get("abnormal_clipping_fraction", 0.01))
     if per_group < 1 or preview_side < 64:
         raise ValueError("samples_per_group must be >= 1 and preview_max_side >= 64")
     manifest_rows = _read_manifest(manifest_path)

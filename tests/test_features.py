@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from src.color.preprocess import hsv_to_rgb
-from src.features.phase4 import (
+from src.features.extraction import (
     _build_feature_columns,
     _cache_key,
     _color_features,
@@ -87,14 +87,14 @@ def test_feature_cache_key_tracks_masks_source_and_threshold_config() -> None:
     row = {"image_id": "sample"}
     masks = {"original": np.ones((6, 6), dtype=np.uint8) * 255, "gray_world": None}
     statuses = {"original": "accepted_heuristic", "gray_world": "not_found"}
-    phase4 = {"min_fruit_pixels": 10, "color_proportions": {"minimum_saturation": 0.15}}
-    phase3 = {"seed": 7, "attempts": 1, "max_iterations": 30, "epsilon": 0.001,
+    feature_settings = {"min_fruit_pixels": 10, "color_proportions": {"minimum_saturation": 0.15}}
+    kmeans_settings = {"seed": 7, "attempts": 1, "max_iterations": 30, "epsilon": 0.001,
               "max_fit_pixels": 100, "min_fruit_pixels": 10, "selection_rule": {"minimum_suspicion_score": 0.3}}
-    base = _cache_key(row, "source", masks, statuses, phase4, phase3)
-    assert base == _cache_key(row, "source", {**masks, "original": masks["original"].copy()}, statuses, phase4, phase3)
-    assert base != _cache_key(row, "different-source", masks, statuses, phase4, phase3)
-    changed = {**phase4, "color_proportions": {"minimum_saturation": 0.2}}
-    assert base != _cache_key(row, "source", masks, statuses, changed, phase3)
+    base = _cache_key(row, "source", masks, statuses, feature_settings, kmeans_settings)
+    assert base == _cache_key(row, "source", {**masks, "original": masks["original"].copy()}, statuses, feature_settings, kmeans_settings)
+    assert base != _cache_key(row, "different-source", masks, statuses, feature_settings, kmeans_settings)
+    changed = {**feature_settings, "color_proportions": {"minimum_saturation": 0.2}}
+    assert base != _cache_key(row, "source", masks, statuses, changed, kmeans_settings)
 
 
 def test_label_summary_covers_all_features_and_keeps_missing_values_missing() -> None:

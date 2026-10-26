@@ -194,9 +194,9 @@ def _audit_group_overlap(rows: list[dict[str, str]], split_rows: dict[str, dict[
 
 
 def _load_task(config: dict[str, Any], schema: dict[str, Any], task: str) -> dict[str, Any]:
-    phase4 = config.get("phase4", {})
-    task_config = phase4.get("tasks", {}).get(task, {})
-    feature_path = project_path(config, f"{phase4.get('output_dir', 'data/features')}/{task}_features.csv")
+    features = config.get("features", {})
+    task_config = features.get("tasks", {}).get(task, {})
+    feature_path = project_path(config, f"{features.get('output_dir', 'data/features')}/{task}_features.csv")
     split_path = project_path(config, task_config["split_path"])
     rows, split_list = _read_csv(feature_path), _read_csv(split_path)
     feature_ids = [row.get("image_id", "") for row in rows]
@@ -252,7 +252,7 @@ def _make_pipeline(model_name: str, seed: int) -> Pipeline:
 
 
 def _param_grid(model_name: str, config: dict[str, Any]) -> dict[str, list[Any]]:
-    settings = config.get("phase5", {})
+    settings = config.get("classifier_training", {})
     if model_name == "KNN":
         return {"classifier__n_neighbors": list(settings.get("knn_neighbors", [3, 5, 7, 11])),
                 "classifier__weights": list(settings.get("knn_weights", ["uniform", "distance"]))}
@@ -542,19 +542,19 @@ def predict_from_features(model_path: str | Path, feature_values: dict[str, Any]
 
 
 def run_phase5(config: dict[str, Any], tasks: list[str] | None = None) -> Path:
-    phase5 = dict(config.get("phase5", {}))
-    if not phase5:
-        raise ValueError("Missing phase5 configuration in config.yaml")
+    classifier_config = dict(config.get("classifier_training", {}))
+    if not classifier_config:
+        raise ValueError("Missing classifier_training configuration in config.yaml")
     selected_tasks = tasks or ["ripeness", "defect"]
     if not set(selected_tasks).issubset(LABELS):
         raise ValueError(f"Unsupported Phase 5 tasks: {selected_tasks}")
-    schema_path = project_path(config, config.get("phase4", {}).get("schema_path", "data/features/feature_schema.json"))
+    schema_path = project_path(config, config.get("features", {}).get("schema_path", "data/features/feature_schema.json"))
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    seed = int(phase5.get("seed", 42))
-    requested_folds = int(phase5.get("cv_folds", 5))
+    seed = int(classifier_config.get("seed", 42))
+    requested_folds = int(classifier_config.get("cv_folds", 5))
     models = ("KNN", "SVM_RBF", "RandomForest")
-    report_dir = project_path(config, phase5.get("report_dir", "reports"))
-    model_dir = project_path(config, phase5.get("model_dir", "models/phase05"))
+    report_dir = project_path(config, classifier_config.get("report_dir", "reports"))
+    model_dir = project_path(config, classifier_config.get("model_dir", "models/classifiers/baseline"))
     report_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
 
@@ -605,7 +605,7 @@ def run_phase5(config: dict[str, Any], tasks: list[str] | None = None) -> Path:
                 search = GridSearchCV(
                     _make_pipeline(model_name, seed), _param_grid(model_name, config),
                     scoring=scoring, refit="macro_f1", cv=folds,
-                    n_jobs=int(phase5.get("n_jobs", 1)), return_train_score=True,
+                    n_jobs=int(classifier_config.get("n_jobs", 1)), return_train_score=True,
                     error_score="raise", verbose=0,
                 )
                 search.fit(X_train, y_train)
@@ -745,7 +745,7 @@ def run_phase5(config: dict[str, Any], tasks: list[str] | None = None) -> Path:
                 "selected_feature_sets": winner["feature_sets"],
                 "imputer": "SimpleImputer(strategy=median, add_indicator=True, keep_empty_features=True)",
                 "scaler": "StandardScaler" if winner["model"] in {"KNN", "SVM_RBF"} else None,
-                "phase5_config": phase5,
+                "phase5_config": classifier_config,
             },
             "caveat": "Provisional: official_accuracy_eligible is false; residual lineage/near-duplicate risks remain.",
         }
@@ -772,7 +772,7 @@ def run_phase5(config: dict[str, Any], tasks: list[str] | None = None) -> Path:
                         key=lambda item: item["validation_macro_f1"])
         importance = permutation_importance(
             rf_winner["estimator"], rf_winner["X_validation"], rf_winner["y_validation"],
-            scoring="f1_macro", n_repeats=int(phase5.get("permutation_repeats", 8)),
+            scoring="f1_macro", n_repeats=int(classifier_config.get("permutation_repeats", 8)),
             random_state=seed, n_jobs=1,
         )
         task_importance = [{
@@ -821,7 +821,7 @@ def run_phase5(config: dict[str, Any], tasks: list[str] | None = None) -> Path:
     }
     (report_dir / "phase05_results.json").write_text(
         json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
-    report_path = project_path(config, phase5.get("report_path", "reports/phase05_report.md"))
+    report_path = project_path(config, classifier_config.get("report_path", "reports/phase05_report.md"))
     _write_report(report_path, task_data, search_rows, metric_rows, confusion_rows,
                   selected_models, importance_rows, correlation_rows, seed, requested_folds)
     LOGGER.info("Phase 5 complete: %s", report_path)

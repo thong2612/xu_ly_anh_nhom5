@@ -11,7 +11,7 @@ from PIL import Image
 from types import SimpleNamespace
 
 from src.segmentation.annotation_gui import FruitMaskAnnotator
-from src.validation.phase07 import (
+from src.validation.evaluation import (
     EXTERNAL_FIELDS, _read_csv, _wilson_interval, _write_fruit_summary,
     _encode_rgb_within_limit, _robustness_variants, _write_csv, import_external_images, prepare_review_workflows,
     evaluate_reviewed_kmeans_pairs, set_external_review, set_kmeans_pair_review,
@@ -65,7 +65,7 @@ def test_external_review_requires_human_label_and_reviewer(tmp_path: Path) -> No
     assert row["ripeness_label"] == ""
 
 
-def test_exact_phase051_duplicate_is_not_external(tmp_path: Path) -> None:
+def test_exact_training_duplicate_is_not_external(tmp_path: Path) -> None:
     payload = _png_bytes()
     image_dir = tmp_path / "data/external_validation/images"
     image_dir.mkdir(parents=True)

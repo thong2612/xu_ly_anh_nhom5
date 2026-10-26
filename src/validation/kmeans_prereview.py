@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 from src.color.preprocess import decode_image
-from src.validation.phase07 import KMEANS_REVIEW_PATH, _read_csv, _write_csv
+from src.validation.evaluation import KMEANS_REVIEW_PATH, _read_csv, _write_csv
 
 
 PREREVIEW_FIELDS = [

@@ -212,7 +212,7 @@ Phase 3 có output hợp lệ cho 1.479/1.500 ảnh ở cả hai cấu hình Ori
 
 Đây là so sánh trên source masks Dataset C đã resize/căn chỉnh, chưa được người dùng duyệt theo từng cặp; lineage augmented chưa giải quyết. Vì vậy các chỉ số chỉ mô tả độ trùng với pseudo-label trong cohort này.
 
-![Hình 5. Ảnh RGB, source mask Dataset C, dự đoán K-Means và overlay; mask là pseudo-label.](figures/fig05_phase3_pseudolabel_example.png)
+![Hình 5. Ảnh RGB, source mask Dataset C, dự đoán K-Means và overlay; mask là pseudo-label.](figures/fig05_kmeans_pseudolabel_example.png)
 
 *Hình 5. Ví dụ cấu trúc RGB/source mask/prediction/overlay từ audit Phase 3. Đây không phải chuyên gia GT. Nguồn: `reports/phase03/previews/mask_semantics_audit.png`.*
 
@@ -264,9 +264,9 @@ Phase 5.1 có 30 tổ hợp (10 feature groups × 3 classifiers). Hình 8 tổng
 
 Độ thiếu feature của nhóm Gray World/cluster cao hơn phần lớn nhóm Original vì một số mask hoặc K-Means block không khả dụng. Vì vậy chênh lệch không thể diễn giải chỉ là khác biệt màu; imputation và pattern missingness cũng có thể tham gia. Trên defect, D4/SVM ngang D1/SVM về validation Macro-F1 sau làm tròn (0,9850) nhưng CV trung bình thấp hơn; paired CV cho thấy D4 kém D1 ở cả 5 fold (Δ trung bình −0,0092 ± 0,0066). D4 sửa 4 lỗi validation và tạo 4 lỗi mới, tức không đổi lỗi ròng. Điều này không cho bằng chứng ổn định rằng K-Means bổ sung cải thiện phân loại.
 
-![Hình 8. Group-CV và validation Macro-F1 của 30 tổ hợp Phase 5.1.](figures/fig08_phase051_model_comparison.png)
+![Hình 8. Group-CV và validation Macro-F1 của 30 tổ hợp Phase 5.1.](figures/fig08_model_comparison.png)
 
-*Hình 8. Các metric lấy từ `reports/phase051/phase051_search_results.csv`; 5-fold group CV nằm trên train, validation dùng chọn cấu hình.*
+*Hình 8. Các metric lấy từ `reports/model_selection/phase051_search_results.csv`; 5-fold group CV nằm trên train, validation dùng chọn cấu hình.*
 
 #### 4.4.2 Model được giữ nguyên, test provisional và confusion matrix
 
@@ -277,9 +277,9 @@ Phase 5.1 có 30 tổ hợp (10 feature groups × 3 classifiers). Hình 8 tổng
 
 *Bảng 6. Validation được dùng chọn model; test chỉ được báo cho winner đã khóa và vẫn provisional.*
 
-![Hình 9. Confusion matrix test cho hai model Phase 5.1 đã khóa.](figures/fig09_phase051_test_confusion_matrices.png)
+![Hình 9. Confusion matrix test cho hai model Phase 5.1 đã khóa.](figures/fig09_test_confusion_matrices.png)
 
-*Hình 9. Ripeness và defect confusion matrices lấy từ `reports/phase051/phase051_confusion_matrices.csv`; test chỉ dùng winner đã khóa, không dùng chọn model.*
+*Hình 9. Ripeness và defect confusion matrices lấy từ `reports/model_selection/phase051_confusion_matrices.csv`; test chỉ dùng winner đã khóa, không dùng chọn model.*
 
 Ripeness confusion matrix có 11 lỗi: partially-ripe bị nhầm sang ripe 4 lần, ripe sang partially-ripe 5 lần, và hai chiều unripe/partially-ripe một lần mỗi chiều. Các sai lệch tập trung ở giai đoạn liền kề, phù hợp với việc ranh giới nhãn chín có thể không sắc nét; đây là diễn giải, không phải nguyên nhân đã xác minh từng quả. Defect có 20 lỗi: 7 false positive trên healthy và 13 false negative trên defective. Chúng phản ánh nhãn cấp quả Dataset C, không phải khả năng định vị pixel. Các misclassified image IDs và stage được lưu trong CSV. Ảnh sai minh họa được đưa vào hình phụ/contact sheet; chúng không được dùng để điều chỉnh model.
 
@@ -335,19 +335,19 @@ Trên MangoFruitBD, artifact Phase 5.1 Original Color + SVM-RBF được gọi n
 
 *Hình 12. Metric trung bình theo ảnh tính lại từ `reports/phase03_results.csv`; 1.479/1.500 có output/config. Đây là độ đồng thuận với pseudo-label, không phải ground truth người dùng duyệt.*
 
-![Hình 13. Learning curve ripeness của Phase 5 lịch sử.](figures/fig13_phase05_learning_curve_ripeness.png)
+![Hình 13. Learning curve ripeness của Phase 5 lịch sử.](figures/fig13_baseline_learning_curve_ripeness.png)
 
 *Hình 13. Learning curve của Phase 5 (split và cấu hình lịch sử), lấy từ `reports/phase05_learning_curve_ripeness.png`; không phải Phase 5.1 và không dùng để báo test cuối.*
 
-![Hình 14. Learning curve defect của Phase 5 lịch sử.](figures/fig14_phase05_learning_curve_defect.png)
+![Hình 14. Learning curve defect của Phase 5 lịch sử.](figures/fig14_baseline_learning_curve_defect.png)
 
 *Hình 14. Learning curve Phase 5 lịch sử từ `reports/phase05_learning_curve_defect.png`; khác split Phase 5.1.*
 
-![Hình 15. Độ ổn định dự đoán và drift đặc trưng trong phép perturbation paired.](figures/fig15_phase07_robustness.png)
+![Hình 15. Độ ổn định dự đoán và drift đặc trưng trong phép perturbation paired.](figures/fig15_robustness_check.png)
 
 *Hình 15. Trung bình feature drift chuẩn hóa theo SD train, n=5 ảnh/biến đổi; nhãn stability lấy từ `reports/phase07_robustness.csv`.*
 
-![Hình 16. Ví dụ ảnh test bị phân loại sai bởi các model Phase 5.1 đã khóa.](figures/fig16_phase051_error_examples.png)
+![Hình 16. Ví dụ ảnh test bị phân loại sai bởi các model Phase 5.1 đã khóa.](figures/fig16_model_error_examples.png)
 
 *Hình 16. Ảnh gốc và nhãn thật → dự đoán sai của winner trên test_locked. Contact sheet sinh từ `phase051_misclassifications.csv` và split manifest; ảnh chỉ minh họa, không giải thích nguyên nhân.*
 

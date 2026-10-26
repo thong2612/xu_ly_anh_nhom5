@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 from src.color.preprocess import decode_image, gray_world, rgb_to_hsv, rgb_to_lab
-from src.segmentation.phase3 import Phase2FruitMaskProvider, cluster_and_detect
+from src.segmentation.kmeans import Phase2FruitMaskProvider, cluster_and_detect
 from src.utils.config import project_path
 
 
@@ -544,7 +544,7 @@ def _distribution_audit(
     seg_rows = [row for row in phase02_rows if row.get("dataset") == "mango_segmentation"
                 and row.get("task") == "defect_segmentation" and row.get("mask_type") == "defect_region"
                 and _truthy(row.get("eligible_for_segmentation", ""))]
-    phase3_path = project_path(config, config.get("phase3", {}).get("results_path", "reports/phase03_results.csv"))
+    phase3_path = project_path(config, config.get("kmeans", {}).get("results_path", "reports/phase03_results.csv"))
     phase3_rows = _read_csv(phase3_path)
     lookup = {(row.get("image_id"), row.get("variant"), row.get("color_space"), row.get("k")): row
               for row in phase3_rows if row.get("mode") == "heuristic"}
@@ -880,10 +880,10 @@ def _report(
 
 def run_phase4(config: dict[str, Any], tasks: list[str] | None = None,
                limit: int | None = None, force: bool = False) -> Path:
-    phase4 = dict(config.get("phase4", {}))
+    phase4 = dict(config.get("features", {}))
     if not phase4:
         raise ValueError("Missing phase4 configuration in config.yaml")
-    phase3 = dict(config.get("phase3", {}))
+    phase3 = dict(config.get("kmeans", {}))
     selected_tasks = tasks or ["ripeness", "defect"]
     invalid = sorted(set(selected_tasks) - {"ripeness", "defect"})
     if invalid:
@@ -894,7 +894,7 @@ def run_phase4(config: dict[str, Any], tasks: list[str] | None = None,
     generated_fruit_manifest = project_path(config, phase4.get("fruit_mask_manifest", "data/metadata/phase04_fruit_masks.csv"))
 
     provider_config = dict(config)
-    provider_config["phase3"] = dict(phase3)
+    provider_config["kmeans"] = dict(phase3)
     provider_config["segmentation"] = dict(config.get("segmentation", {}))
     provider_config["segmentation"]["mask_dir"] = phase4.get("fruit_mask_dir", "data/processed/phase4_fruit_masks")
     provider = Phase2FruitMaskProvider(provider_config, provider_config["segmentation"], generated_fruit_manifest)

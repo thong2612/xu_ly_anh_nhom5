@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from src.dataset.phase02 import (
+from src.dataset.curation import (
     _assign_group_splits,
     audit_and_normalize_masks,
     exact_duplicate_groups,

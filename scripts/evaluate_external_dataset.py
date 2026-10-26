@@ -25,8 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.demo.phase6 import decode_upload, infer_image, load_demo_assets
-from src.models.phase051 import _ssim_gray
+from src.inference.pipeline import decode_upload, infer_image, load_demo_assets
+from src.models.model_selection import _ssim_gray
 from src.validation.dataset_v2_external import (
     crop_exif_corrected_rgb, evaluate_predictions, make_dhash, pixel_sha256,
     primary_exclusion_reason, summarize_groups,
@@ -197,9 +197,9 @@ def duplicate_audit(source_sha: str, source_rgb: np.ndarray, input_rgb: np.ndarr
 def model_fingerprint(assets: Any) -> str:
     digests = []
     for task in ("ripeness", "defect"):
-        path = assets.root / "models" / "phase051" / f"{task}_selected.joblib"
+        path = assets.root / "models" / "classifiers" / f"{task}_selected.joblib"
         digests.append(sha256_bytes(path.read_bytes()))
-    schema_path = assets.root / assets.config["phase4"]["schema_path"]
+    schema_path = assets.root / assets.config["features"]["schema_path"]
     digests.append(sha256_bytes(schema_path.read_bytes()))
     return hashlib.sha256("|".join(digests).encode()).hexdigest()
 
@@ -336,7 +336,7 @@ def render_report(rows: list[dict[str, Any]], metrics: dict[str, Any], groups: l
     lines = [
         "# Phase 7 — Dataset v2 External Evaluation", "",
         "## Phạm vi và tính hợp lệ", "",
-        "Hai artifact Phase 5.1 được dùng nguyên trạng qua `src/demo/phase6.py::infer_image`; không huấn luyện lại, không chọn lại ngưỡng và không đọc ground-truth mask lúc inference. Mỗi crop MangoFruitBD được cắt từ bbox YOLO trên ảnh đã áp EXIF transpose, sau đó gửi qua cùng decoder/preprocessing/fruit-mask/feature order của Phase 6. Ảnh Harumanis được đưa vào như ảnh gốc.",
+        "Hai artifact Phase 5.1 được dùng nguyên trạng qua `src/inference/pipeline.py::infer_image`; không huấn luyện lại, không chọn lại ngưỡng và không đọc ground-truth mask lúc inference. Mỗi crop MangoFruitBD được cắt từ bbox YOLO trên ảnh đã áp EXIF transpose, sau đó gửi qua cùng decoder/preprocessing/fruit-mask/feature order. Ảnh Harumanis được đưa vào như ảnh gốc.",
         "",
         f"Model fingerprint: `{model_id}`. Kết quả này là **external evaluation thăm dò**, không phải benchmark chính thức: các artifact Phase 5.1 vẫn có `official_accuracy_eligible=false`, split/lineage còn provisional, và nguồn ngoài có khác biệt nhãn/miền ảnh.",
         "",

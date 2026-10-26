@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from src.demo.phase6 import (
+from src.inference.pipeline import (
     InputImageError, _predict, build_ordered_model_vector, decode_upload,
     infer_image, load_demo_assets, prediction_summary_for_cli,
 )
@@ -79,7 +79,7 @@ def test_missing_feature_policy_and_failed_mask_return_unavailable() -> None:
     assert not _predict(artifact, {}, "accepted_heuristic")["available"]
 
 
-def test_selected_models_load_and_match_phase4_order() -> None:
+def test_selected_models_load_and_match_feature_order() -> None:
     assets = load_demo_assets(ROOT)
     assert assets.ripeness_model["experiment"] == "R2_gray_world_color"
     assert assets.defect_model["experiment"] == "D1_original_color"
@@ -104,7 +104,7 @@ def test_no_mango_like_blank_image_warns_and_failed_segmentation_is_unavailable(
         proposed_mask=np.zeros((64, 80), np.uint8), status="no_plausible_component",
         component_count=0, selected_area_fraction=0.0, score=0.0, details="test fail",
     )
-    with patch("src.segmentation.phase3.segment_channel", return_value=dummy_result):
+    with patch("src.segmentation.kmeans.segment_channel", return_value=dummy_result):
         result = infer_image(_png_bytes(), "blank.png", assets)
     assert "chứa xoài" in result["warning"]
     assert result["fruit_mask"] is None
@@ -114,12 +114,17 @@ def test_no_mango_like_blank_image_warns_and_failed_segmentation_is_unavailable(
 
 
 def _real_ripeness_image() -> Path:
-    with (ROOT / "data/features/ripeness_features.csv").open(encoding="utf-8-sig", newline="") as stream:
-        for row in csv.DictReader(stream):
-            candidate = ROOT / row["image_path"]
-            if candidate.is_file():
-                return candidate
-    pytest.skip("Phase 4 ripeness images are not available in this checkout")
+    feature_table = ROOT / "data/features/ripeness_features.csv"
+    if feature_table.is_file():
+        with feature_table.open(encoding="utf-8-sig", newline="") as stream:
+            for row in csv.DictReader(stream):
+                candidate = ROOT / row["image_path"]
+                if candidate.is_file():
+                    return candidate
+    sample = ROOT / "demo_samples/sample_ripeness.jpg"
+    if sample.is_file():
+        return sample
+    pytest.skip("No real mango image is available in this checkout")
 
 
 def test_real_image_and_cli_streamlit_inference_are_identical() -> None:
@@ -129,7 +134,7 @@ def test_real_image_and_cli_streamlit_inference_are_identical() -> None:
     assets = load_demo_assets(ROOT)
     result = infer_image(image_path.read_bytes(), image_path.name, assets)
     expected = prediction_summary_for_cli(result)
-    temporary_model = ROOT / "models/phase051/.phase06_roundtrip_test.joblib"
+    temporary_model = ROOT / "models/classifiers/.inference_roundtrip_test.joblib"
     try:
         joblib.dump(assets.ripeness_model, temporary_model)
         reloaded_model = joblib.load(temporary_model)
@@ -138,7 +143,7 @@ def test_real_image_and_cli_streamlit_inference_are_identical() -> None:
     finally:
         temporary_model.unlink(missing_ok=True)
     completed = subprocess.run(
-        [sys.executable, str(ROOT / "scripts/phase06_predict.py"), str(image_path)],
+        [sys.executable, str(ROOT / "scripts/predict_image.py"), str(image_path)],
         cwd=ROOT, check=True, capture_output=True, text=True, timeout=60,
     )
     cli_result = json.loads(completed.stdout)
@@ -148,7 +153,7 @@ def test_real_image_and_cli_streamlit_inference_are_identical() -> None:
     app_test.run()
     app_test.button[0].click().run()
     assert not app_test.exception
-    ui_result = prediction_summary_for_cli(app_test.session_state["phase06_result"])
+    ui_result = prediction_summary_for_cli(app_test.session_state["inference_result"])
     assert ui_result == expected
     assert result["fruit_mask_status"] == "accepted_heuristic"
     assert result["ripeness"]["available"]

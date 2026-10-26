@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from src.segmentation.phase3 import (
+from src.segmentation.kmeans import (
     _overlay,
     _cache_key,
     cluster_and_detect,
@@ -84,7 +84,7 @@ def test_overlay_is_written_as_rgb_image_with_only_masked_pixels_tinted() -> Non
     assert overlay_bgr[2, 3, 2] > overlay_bgr[2, 3, 0]
 
 
-def test_phase3_cache_key_changes_with_source_mask_and_configuration() -> None:
+def test_kmeans_cache_key_changes_with_source_mask_and_configuration() -> None:
     row = {"_source_sha256": "source-a"}
     mask = np.zeros((8, 8), dtype=np.uint8)
     settings = {"attempts": 1, "max_iterations": 30, "epsilon": 0.001,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.models.phase051 import (
+from src.models.model_selection import (
     apply_visual_pair_review,
     audit_candidates,
     prepare_splits,
@@ -20,7 +20,7 @@ from src.utils.config import load_config
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MangoResearch Phase 5.1 leakage audit and model evaluation")
+    parser = argparse.ArgumentParser(description="MangoResearch model audit, selection, and training")
     parser.add_argument("stage", choices=("audit", "review", "split", "train", "report", "all"),
                         help="audit candidates, persist reviewed decisions, prepare grouped split, train, or run all stages")
     args = parser.parse_args()
@@ -40,7 +40,7 @@ def main() -> int:
         return 0
     if args.stage == "train":
         result = run_phase051_models(config)
-        audit_path = config["_project_root"] + "/reports/phase051/near_duplicate_audit_summary.json"
+        audit_path = config["_project_root"] + "/reports/model_selection/near_duplicate_audit_summary.json"
         split_path = config["_project_root"] + "/data/splits/phase051/split_summary.json"
         audit = json.loads(Path(audit_path).read_text(encoding="utf-8"))
         split = json.loads(Path(split_path).read_text(encoding="utf-8"))
@@ -49,7 +49,7 @@ def main() -> int:
         return 0
     if args.stage == "report":
         root = Path(config["_project_root"])
-        report_dir = root / "reports/phase051"
+        report_dir = root / "reports/model_selection"
         def read_rows(filename: str):
             with (report_dir / filename).open("r", encoding="utf-8-sig", newline="") as stream:
                 return list(csv.DictReader(stream))

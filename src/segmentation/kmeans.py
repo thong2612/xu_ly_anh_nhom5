@@ -347,13 +347,13 @@ class Phase2FruitMaskProvider:
         self.config = config
         self.settings = settings
         self.root = Path(config["_project_root"])
-        phase3 = config.get("phase3", {})
+        kmeans_config = config.get("kmeans", {})
         segmentation = config.get("segmentation", {})
         self.mask_root = project_path(config, segmentation.get("mask_dir", "data/processed/fruit_masks"))
         self.generated_manifest_path = generated_manifest_path or project_path(
             config, "data/metadata/phase03_fruit_masks.csv"
         )
-        self.phase2_records = _read_csv(project_path(config, phase3.get(
+        self.phase2_records = _read_csv(project_path(config, kmeans_config.get(
             "phase2_mask_manifest", "data/metadata/phase2_segmentation_manifest.csv")))
         self.generated_records = _read_csv(self.generated_manifest_path)
         self.records: dict[tuple[str, str], dict[str, str]] = {}
@@ -706,7 +706,7 @@ def _generate_report(path: Path, rows: list[dict[str, Any]], metrics: list[dict[
 
 def run_phase3(config: dict[str, Any], limit: int | None = None,
                modes: list[str] | None = None, force: bool = False) -> Path:
-    phase = dict(config.get("phase3", {}))
+    phase = dict(config.get("kmeans", {}))
     root = Path(config["_project_root"])
     manifest_path = project_path(config, phase.get("manifest_path", "data/metadata/phase02_manifest.csv"))
     output_root = project_path(config, phase.get("output_dir", "data/processed/phase3"))
